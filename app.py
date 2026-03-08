@@ -173,10 +173,11 @@ def register():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        code = request.form.get("code")
+        code = request.form.get("invite_code")
 
         if not username or not password or not code:
-            return "Missing fields", 400
+            flash("Please fill in all fields", "error")
+            return render_template("login.html", username=username)
 
         # 1. Determine Identity & Global Role
         is_global_admin = code == MASTER_INVITE_CODE
@@ -215,7 +216,7 @@ def register():
             return redirect(url_for("login"))
         finally:
             conn.close()
-    return render_template("login.html")  # Or register.html if you have it
+    return render_template("login.html")  
 
 
 @app.route("/api/join_game", methods=["POST"])
@@ -845,7 +846,7 @@ def statistics_page():
         all_active = cur.fetchall()
         if all_active:
             max_games = all_active[0]["games"]
-            tied_players = [p["name"] for p in all_active if p["games"] == max_games]
+            tied_players = sorted([p["name"] for p in all_active if p["games"] == max_games])
             most_active = {
                 "name": tied_players[0],
                 "games": max_games,
@@ -900,24 +901,55 @@ def statistics_page():
         )
         recent_matches = cur.fetchall() or []
 
-        # 7. LONGEST GAME STREAK
-        cur.execute(
-            """
-            SELECT p.name, COUNT(DISTINCT r.match_date) as streak
-            FROM players p
-            JOIN results r ON p.id = r.player_id
-            WHERE p.game_id = %s AND r.points IS NOT NULL
-            GROUP BY p.id, p.name
-            ORDER BY streak DESC
-            LIMIT 1
-        """,
-            (game_id,),
-        )
-        row = cur.fetchone()
-        if row:
-            longest_game_streak = {"player": row["name"], "streak": row["streak"]}
+        # 6. LONGEST GAME STREAK (WITH TIE HANDLING)
+        try:
+            # Get max streak first
+            cur.execute(
+                """
+                SELECT MAX(streak) as max_streak
+                FROM (
+                    SELECT COUNT(DISTINCT r.match_date) as streak
+                    FROM players p
+                    JOIN results r ON p.id = r.player_id
+                    WHERE p.game_id = %s AND r.points IS NOT NULL
+                    GROUP BY p.id
+                ) x
+                """,
+                (game_id,),
+            )
+            max_row = cur.fetchone()
+            max_streak = max_row["max_streak"] if max_row else 0
 
-        # 8. LONGEST WIN STREAK
+            # Get all players with max streak
+            if max_streak > 0:
+                cur.execute(
+                    """
+                    SELECT p.name, COUNT(DISTINCT r.match_date) as streak
+                    FROM players p
+                    JOIN results r ON p.id = r.player_id
+                    WHERE p.game_id = %s AND r.points IS NOT NULL
+                    GROUP BY p.id, p.name
+                    HAVING COUNT(DISTINCT r.match_date) = %s
+                    ORDER BY p.name
+                    """,
+                    (game_id, max_streak),
+                )
+                
+                tied_players = cur.fetchall()
+                if tied_players:
+                    if len(tied_players) > 1:
+                        names = " & ".join([p["name"] for p in tied_players])
+                        longest_game_streak = {"player": names, "streak": max_streak}
+                    else:
+                        longest_game_streak = {
+                            "player": tied_players[0]["name"], 
+                            "streak": max_streak
+                        }
+        except Exception as e:
+            app.logger.error(f"Game streak query error: {e}")
+
+
+        # 7. LONGEST WIN STREAK
         try:
             cur.execute(
                 """
@@ -961,7 +993,7 @@ def statistics_page():
         except:
             pass
 
-        # 9. LONGEST LOSING STREAK
+        # 8. LONGEST LOSING STREAK
         try:
             cur.execute(
                 """
@@ -1005,7 +1037,7 @@ def statistics_page():
         except:
             pass
 
-        # 10. BEST TEAM PAIRINGS (IMPLEMENTED)
+        # 9. BEST TEAM PAIRINGS (IMPLEMENTED)
         try:
             cur.execute(
                 """
@@ -1067,7 +1099,7 @@ def statistics_page():
         except Exception as e:
             app.logger.error(f"Pairings query error: {e}")
 
-        # 12. FUN FACTS (IMPROVED)
+        # 10. FUN FACTS (IMPROVED)
         if win_rates:
             fun_facts.append(
                 {
