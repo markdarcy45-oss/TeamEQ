@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Delete Account{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 50px auto; padding: 20px; background: white; border-radius: 8px;">
+    <h1 style="color: #dc2626; margin-bottom: 20px;">Delete Your Account</h1>
+    
+    <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; margin-bottom: 20px;">
+        <p style="margin: 0; color: #991b1b;">
+            <strong>Warning:</strong> Account deletion is permanent and cannot be undone.
+        </p>
+    </div>
+
+    <h2 style="font-size: 1.1rem; margin-top: 30px;">What will be deleted:</h2>
+    <ul style="line-height: 1.8; color: #334155;">
+        <li>Your user account and login credentials</li>
+        <li>All player data you've created</li>
+        <li>All match results and statistics</li>
+        <li>League memberships</li>
+        <li>All associated game data</li>
+    </ul>
+
+    <h2 style="font-size: 1.1rem; margin-top: 30px;">How to request account deletion:</h2>
+    <ol style="line-height: 1.8; color: #334155;">
+        <li>Send an email to <strong>support@teameq.app</strong> (or your actual email)</li>
+        <li>Include your username in the email</li>
+        <li>Use subject line: "Account Deletion Request"</li>
+        <li>Your request will be processed within <strong>48 hours</strong></li>
+    </ol>
+
+    <div style="background: #f0f9ff; border-left: 4px solid #2563eb; padding: 15px; margin-top: 30px;">
+        <p style="margin: 0; color: #1e40af;">
+            <strong>Alternative:</strong> If you only want to remove yourself from a specific league, 
+            contact your league administrator instead of deleting your entire account.
+        </p>
+    </div>
+
+    <div style="margin-top: 40px; text-align: center;">
+        <a href="{{ url_for('players_page_render') }}" 
+           style="display: inline-block; padding: 12px 24px; background: #64748b; color: white; 
+                  text-decoration: none; border-radius: 6px; font-weight: bold;">
+            ← Back to App
+        </a>
+    </div>
+</div>
+{% endblock %}
