@@ -125,6 +125,11 @@ def require_login():
 @app.route('/health')
 def health():
     return "OK", 200
+    
+@app.route('/privacy')
+def privacy_policy():
+    """Privacy policy page - required for Google Play"""
+    return render_template('privacy.html')    
 
 @app.route("/favicon.ico")
 def favicon():
