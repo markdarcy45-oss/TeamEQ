@@ -1,10 +1,9 @@
 {
-  "name": "TeamEQ Match Tracker",
+  "name": "TeamEQ",
   "short_name": "TeamEQ",
-  "description": "Manage match results, player rankings, and team statistics.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
+  "background_color": "#ffffff",
   "theme_color": "#2563eb",
   "icons": [
     {
@@ -16,7 +15,8 @@
     {
       "src": "/static/icon-512.png",
       "sizes": "512x512",
-      "type": "any maskable"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
