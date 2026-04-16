@@ -123,6 +123,7 @@ def require_login():
         return redirect(url_for("login"))
 
 @app.route('/health')
+@limiter.exempt 
 def health():
     return "OK", 200
     
