@@ -27,6 +27,8 @@ TECHNICAL STACK
 - Auth       : Flask-Login with role-based session persistence
 - Hosting    : Render (Web Service + PostgreSQL 18)
 - Deployment : teams-7g57.onrender.com
+- Domain     : teameq.app (Porkbun)
+- Email      : support@teameq.app (Porkbun + Brevo + Gmail)
 
 INSTALLATION & SETUP
 --------------------
@@ -47,7 +49,7 @@ INSTALLATION & SETUP
    
    Production (Render):
    Automatic deployment via GitHub integration
-   Access via https://teams-7g57.onrender.com
+   Access via https://teameq.app
 
 DEPLOYMENT ON RENDER
 --------------------
@@ -57,6 +59,28 @@ DEPLOYMENT ON RENDER
 - Free Tier   : Suitable for 0-100 users
 - Upgrade Path: $7/month for 1GB RAM (100+ users)
 - Auto-Deploy : Enabled via GitHub repository integration
+
+DOMAIN (PORKBUN)
+----------------
+- Registrar   : Porkbun (porkbun.com)
+- Domain      : teameq.app
+- DNS Config  : A record → 216.24.57.1 (Render)
+                CNAME www → teams-7g57.onrender.com
+- Email Alias : support@teameq.app (forwarding enabled)
+- MX Records  : fwd1.porkbun.com (prio 10)
+                fwd2.porkbun.com (prio 20)
+
+EMAIL (BREVO + GMAIL)
+---------------------
+- Provider    : Brevo (brevo.com)
+- Send-As     : support@teameq.app
+- Setup       : Brevo SMTP handshake configured with Gmail allowing
+                outbound emails to be sent from support@teameq.app
+- DNS Records : brevo1._domainkey.teameq.app (DKIM verification)
+                brevo2._domainkey.teameq.app (DKIM verification)
+                TXT SPF record (include:_spf.porkbun.com)
+                TXT DMARC record (_dmarc.teameq.app)
+- Use Case    : Support emails, user communication, app notifications
 
 USER ROLES
 ----------
@@ -77,10 +101,12 @@ DEVELOPMENT NOTES
 
 PRODUCTION URLS
 ---------------
-- Live Application : https://teams-7g57.onrender.com
-- Privacy Policy   : https://teams-7g57.onrender.com/privacy
-- Account Deletion : https://teams-7g57.onrender.com/delete-account
-- Manifest (PWA)   : https://teams-7g57.onrender.com/manifest.json
+- Live Application : https://teameq.app
+- Live Application : https://teams-7g57.onrender.com (legacy, APK)
+- Privacy Policy   : https://teameq.app/privacy
+- Account Deletion : https://teameq.app/delete-account
+- Manifest (PWA)   : https://teameq.app/manifest.json
+- Support Email    : support@teameq.app
 
 MOBILE APP (ANDROID)
 --------------------
@@ -88,5 +114,7 @@ MOBILE APP (ANDROID)
 - Distribution : Google Play Store (Closed Testing)
 - Build Method : Trusted Web Activity (TWA) via Bubblewrap/PWABuilder
 - Play Store   : https://play.google.com/store/apps/details?id=com.onrender.teams_7g57.twa
+- Note         : APK currently points to teams-7g57.onrender.com
+                 Rebuild required to point to teameq.app for production
 
 ================================================================================
