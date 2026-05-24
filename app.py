@@ -9,7 +9,16 @@ from datetime import datetime
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    jsonify,
+    send_from_directory,
+)
 from flask_login import (
     LoginManager,
     UserMixin,
@@ -22,8 +31,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_compress import Compress  
-from flask_caching import Cache      
+from flask_compress import Compress
+from flask_caching import Cache
 
 # =================================================================
 # CONFIGURATION
@@ -32,7 +41,7 @@ load_dotenv()
 
 app = Flask(__name__)
 Compress(app)
-cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+cache = Cache(app, config={"CACHE_TYPE": "simple"})
 logging.basicConfig(level=logging.INFO)
 
 # Essential Environment Variables
@@ -95,6 +104,7 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 
+
 @login_manager.user_loader
 def load_user(user_id):
     conn = get_db_connection()
@@ -117,26 +127,32 @@ def load_user(user_id):
 def require_login():
     # List of endpoints that don't require logging in
     # ADD 'register' TO THIS LIST
-    allowed_routes = ["login", "register", "static","serve_manifest"]
+    allowed_routes = ["login", "register", "static", "serve_manifest"]
 
     if not current_user.is_authenticated and request.endpoint not in allowed_routes:
         return redirect(url_for("login"))
 
-@app.route('/health')
-@limiter.exempt 
+
+@app.route("/health")
+@limiter.exempt
 def health():
     return "OK", 200
-    
-@app.route('/privacy')
+
+
+@app.route("/privacy")
 def privacy_policy():
     """Privacy policy page - required for Google Play"""
-    return render_template('privacy.html')    
-    
-@app.route('/manifest.json')
+    return render_template("privacy.html")
+
+
+@app.route("/manifest.json")
 def serve_manifest():
     """Serve PWA manifest for app icons and metadata"""
-    response = send_from_directory('.', 'manifest.json', mimetype='application/manifest+json')
-    return response 
+    response = send_from_directory(
+        ".", "manifest.json", mimetype="application/manifest+json"
+    )
+    return response
+
 
 @app.route("/favicon.ico")
 def favicon():
@@ -246,7 +262,7 @@ def register():
             return redirect(url_for("login"))
         finally:
             conn.close()
-    return render_template("login.html")  
+    return render_template("login.html")
 
 
 @app.route("/api/join_game", methods=["POST"])
@@ -395,9 +411,11 @@ def group_page():
     finally:
         conn.close()
 
-@app.route('/delete-account')
+
+@app.route("/delete-account")
 def delete_account_info():
-    return render_template('delete_account.html')
+    return render_template("delete_account.html")
+
 
 @app.route("/logout")
 @login_required
@@ -449,11 +467,12 @@ def api_players(game_id):
         cur = conn.cursor()
         cur.execute(
             """
-            SELECT p.name, COALESCE(rv.rank, 0) as rank
-            FROM players p
-            LEFT JOIN rankview rv ON LOWER(p.name) = LOWER(rv.player)
-            WHERE p.game_id = %s AND p.active = 1
-            ORDER BY LOWER(p.name) ASC  -- <--- CHANGE THIS LINE
+        SELECT p.name, COALESCE(ps.ppg_rank, 0) as rank
+        FROM players p
+        LEFT JOIN ppg_standings ps ON LOWER(p.name) = LOWER(ps.player)
+        AND p.game_id = ps.game_id
+        WHERE p.game_id = %s AND p.active = 1
+        ORDER BY LOWER(p.name) ASC
         """,
             (game_id,),
         )
@@ -553,10 +572,11 @@ def teams_page():
         # 3. Fetch the roster and ranks for the SPECIFIC active game
         cur.execute(
             """
-            SELECT p.name as player, COALESCE(rv.rank, 0) as rank
+            SELECT p.name as player, COALESCE(ps.ppg_rank, 0) as rank
             FROM players p
-            LEFT JOIN rankview rv ON LOWER(p.name) = LOWER(rv.player)
-            WHERE p.active = 1 AND p.game_id = %s 
+            LEFT JOIN ppg_standings ps ON LOWER(p.name) = LOWER(ps.player)
+            AND p.game_id = ps.game_id
+            WHERE p.active = 1 AND p.game_id = %s
             ORDER BY LOWER(p.name)
         """,
             (game_id,),
@@ -580,9 +600,10 @@ def generate_teams():
     cur = conn.cursor()
     cur.execute(
         """
-        SELECT p.name as player, COALESCE(rv.rank, 0) as rank
+        SELECT p.name as player, COALESCE(ps.ppg_rank, 0) as rank
         FROM players p
-        LEFT JOIN rankview rv ON LOWER(p.name) = LOWER(rv.player)
+        LEFT JOIN ppg_standings ps ON LOWER(p.name) = LOWER(ps.player)
+        AND p.game_id = ps.game_id
         WHERE p.name = ANY(%s) AND p.active = 1
     """,
         (selected_names,),
@@ -760,27 +781,39 @@ def get_locked_teams():
 @login_required
 def results_page():
     """Combined results submission and standings display"""
-    
+
     # Handle POST (submit results) - Admin only
     if request.method == "POST":
         if not current_user.is_admin:
             return jsonify({"error": "Admin access required"}), 403
-        
+
         data = request.get_json(silent=True) or {}
-        date_str, player_results = data.get("Date") or data.get("date"), data.get("results", [])
+        date_str, player_results = data.get("Date") or data.get("date"), data.get(
+            "results", []
+        )
         total_points = sum(int(r.get("points", 0)) for r in player_results)
         num_players = len(player_results)
-        
+
         # Validation Logic
         if num_players == 10 and total_points not in [10, 15]:
-            return jsonify({
-                "error": f"10 players must have 10 or 15 total points (Current: {total_points})"
-            }), 400
+            return (
+                jsonify(
+                    {
+                        "error": f"10 players must have 10 or 15 total points (Current: {total_points})"
+                    }
+                ),
+                400,
+            )
         if num_players == 12 and total_points not in [12, 18]:
-            return jsonify({
-                "error": f"12 players must have 12 or 18 total points (Current: {total_points})"
-            }), 400
-        
+            return (
+                jsonify(
+                    {
+                        "error": f"12 players must have 12 or 18 total points (Current: {total_points})"
+                    }
+                ),
+                400,
+            )
+
         conn = get_db_connection()
         try:
             cur = conn.cursor()
@@ -793,27 +826,36 @@ def results_page():
                     """INSERT INTO results (match_date, game_id, player_id, points, submitted_by)
                        VALUES (%s, %s, %s, %s, %s) ON CONFLICT (player_id, match_date) 
                        DO UPDATE SET points = EXCLUDED.points, submitted_by = EXCLUDED.submitted_by""",
-                    (date_str, game_id, res["player_id"], res["points"], current_user.id)
+                    (
+                        date_str,
+                        game_id,
+                        res["player_id"],
+                        res["points"],
+                        current_user.id,
+                    ),
                 )
             conn.commit()
             return jsonify({"ok": True})
         finally:
             conn.close()
-    
+
     # Handle GET (display page with standings)
     game_id = session.get("active_game_id")
     if not game_id:
         return redirect(url_for("players_page_render"))
-    
+
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
-        "SELECT * FROM rankview WHERE game_id = %s ORDER BY points DESC", (game_id,)
+        """SELECT * FROM ppg_standings
+       WHERE game_id = %s
+       ORDER BY ppg_rank ASC NULLS LAST, ppg DESC""",
+        (game_id,),
     )
     rows = cur.fetchall()
     conn.close()
-    
-    return render_template("results_page.html", rankview=rows)
+
+    return render_template("results_page.html", standings=rows)
 
 
 @app.route("/statistics")
@@ -880,7 +922,9 @@ def statistics_page():
         all_active = cur.fetchall()
         if all_active:
             max_games = all_active[0]["games"]
-            tied_players = sorted([p["name"] for p in all_active if p["games"] == max_games])
+            tied_players = sorted(
+                [p["name"] for p in all_active if p["games"] == max_games]
+            )
             most_active = {
                 "name": tied_players[0],
                 "games": max_games,
@@ -968,7 +1012,7 @@ def statistics_page():
                     """,
                     (game_id, max_streak),
                 )
-                
+
                 tied_players = cur.fetchall()
                 if tied_players:
                     if len(tied_players) > 1:
@@ -976,12 +1020,11 @@ def statistics_page():
                         longest_game_streak = {"player": names, "streak": max_streak}
                     else:
                         longest_game_streak = {
-                            "player": tied_players[0]["name"], 
-                            "streak": max_streak
+                            "player": tied_players[0]["name"],
+                            "streak": max_streak,
                         }
         except Exception as e:
             app.logger.error(f"Game streak query error: {e}")
-
 
         # 7. LONGEST WIN STREAK
         try:
