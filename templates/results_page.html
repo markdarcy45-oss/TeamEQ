@@ -31,7 +31,6 @@
         padding-bottom: 12px;
     }
 
-    /* Tables */
     .dashboard-table {
         border-collapse: collapse;
         width: 100%;
@@ -56,6 +55,7 @@
     .num {
         text-align: center !important;
     }
+
     .player-name {
         font-weight: 600;
         color: #1e293b;
@@ -91,23 +91,28 @@
         font-weight: bold;
         transition: 0.2s;
     }
+
     .btn.primary {
         background: var(--primary);
         color: white;
     }
+
     .btn.success {
         background: var(--success);
         color: white;
     }
+
     .btn.secondary {
         background: white;
         border: 1px solid var(--border);
         color: var(--text-muted);
     }
+
     .btn:hover {
         opacity: 0.9;
         transform: translateY(-1px);
     }
+
     .btn:disabled {
         opacity: 0.4;
         cursor: not-allowed;
@@ -121,16 +126,23 @@
         border-radius: 20px;
         background: #f1f5f9;
     }
+
     .placeholder {
         color: var(--text-muted);
         padding: 40px !important;
         text-align: center;
         font-style: italic;
     }
+
+    .form-w { color: #166534; font-weight: 700; font-size: 0.75rem; }
+    .form-d { color: #92400e; font-weight: 700; font-size: 0.75rem; }
+    .form-l { color: #991b1b; font-weight: 700; font-size: 0.75rem; }
 </style>
 
 <div class="page-container">
     <div class="dashboard-wrapper">
+
+        <!-- ===================== PANEL 1: SUBMIT RESULTS ===================== -->
         <div class="panel">
             <h2 class="section-title">Submit Match Results</h2>
             <div id="errorMsg" style="color: var(--warning); margin-bottom: 10px; font-size: 0.9rem"></div>
@@ -166,68 +178,138 @@
             </div>
         </div>
 
+        <!-- ===================== PANEL 2: STANDINGS ===================== -->
         <div class="panel">
-            <h2 class="section-title">Standings</h2>
+            <h2 class="section-title">Standings
+                <span style="font-size:0.75rem; font-weight:400;
+                             color:var(--text-muted); margin-left:8px;">
+                    Ranked by Points Per Game · 40% attendance required
+                </span>
+            </h2>
+
             <div class="table-container">
                 <table class="dashboard-table">
                     <thead>
                         <tr>
                             <th>Player</th>
                             <th class="num">MP</th>
+                            <th class="num">W</th>
+                            <th class="num">D</th>
+                            <th class="num">L</th>
                             <th class="num">Pts</th>
+                            <th class="num">PPG</th>
+                            <th class="num">Form</th>
                             <th class="num">Rank</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% if rankview %} {% for r in rankview %}
+                        {% if standings %}
+
+                            <!-- ELIGIBLE PLAYERS -->
+                            {% for r in standings if r['status'] == 'Eligible' %}
+                            <tr>
+                                <td class="player-name">{{ r['player'] or '—' }}</td>
+                                <td class="num">{{ r['mp'] or 0 }}</td>
+                                <td class="num">{{ r['wins'] or 0 }}</td>
+                                <td class="num">{{ r['draws'] or 0 }}</td>
+                                <td class="num">{{ r['losses'] or 0 }}</td>
+                                <td class="num" style="font-weight:bold; color:var(--primary)">
+                                    {{ r['points'] or 0 }}
+                                </td>
+                                <td class="num" style="font-weight:bold;">
+                                    {{ r['ppg'] or '—' }}
+                                </td>
+                                <td class="num">
+                                    {% if r['form'] %}
+                                        {% for ch in r['form'] %}
+                                            {% if ch == 'W' %}<span class="form-w">W</span>
+                                            {% elif ch == 'D' %}<span class="form-d">D</span>
+                                            {% else %}<span class="form-l">L</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}—{% endif %}
+                                </td>
+                                <td class="num">
+                                    <span style="background:#e2e8f0; padding:2px 8px;
+                                                 border-radius:10px; font-size:0.8rem;">
+                                        {{ r['ppg_rank'] or '—' }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                            <!-- PROVISIONAL DIVIDER + ROWS -->
+                            {% set provisional = standings | selectattr('status', 'equalto', 'Provisional') | list %}
+                            {% if provisional %}
+                            <tr>
+                                <td colspan="9"
+                                    style="padding:6px 12px; font-size:0.75rem;
+                                           color:var(--text-muted); background:#f8fafc;
+                                           font-style:italic; text-align:left;">
+                                    Provisional — more games needed to qualify for ranking
+                                </td>
+                            </tr>
+                            {% for r in provisional %}
+                            <tr style="opacity:0.55;">
+                                <td class="player-name">{{ r['player'] or '—' }}</td>
+                                <td class="num">{{ r['mp'] or 0 }}</td>
+                                <td class="num">{{ r['wins'] or 0 }}</td>
+                                <td class="num">{{ r['draws'] or 0 }}</td>
+                                <td class="num">{{ r['losses'] or 0 }}</td>
+                                <td class="num" style="font-weight:bold; color:var(--primary)">
+                                    {{ r['points'] or 0 }}
+                                </td>
+                                <td class="num">{{ r['ppg'] or '—' }}</td>
+                                <td class="num">
+                                    {% if r['form'] %}
+                                        {% for ch in r['form'] %}
+                                            {% if ch == 'W' %}<span class="form-w">W</span>
+                                            {% elif ch == 'D' %}<span class="form-d">D</span>
+                                            {% else %}<span class="form-l">L</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}—{% endif %}
+                                </td>
+                                <td class="num">
+                                    <span style="background:#f1f5f9; padding:2px 8px;
+                                                 border-radius:10px; font-size:0.75rem;
+                                                 color:var(--text-muted);">
+                                        —
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% endif %}
+
+                        {% else %}
                         <tr>
-                            <td class="player-name">{{ r['Player'] or r['player'] or '—' }}</td>
-                            <td class="num">{{ r['MP'] or r['Played'] or r['mp'] or r['played'] or 0 }}</td>
-                            <td class="num" style="font-weight: bold; color: var(--primary)">
-                                {{ r['Points'] or r['points'] or 0 }}
-                            </td>
-                            <td class="num">
-                                <span
-                                    style="
-                                        background: #e2e8f0;
-                                        padding: 2px 8px;
-                                        border-radius: 10px;
-                                        font-size: 0.8rem;
-                                    "
-                                    >{{ r['Rank'] or r['rank'] or '-' }}</span
-                                >
-                            </td>
-                        </tr>
-                        {% endfor %} {% else %}
-                        <tr>
-                            <td colspan="4" class="placeholder">No standings found.</td>
+                            <td colspan="9" class="placeholder">No standings found.</td>
                         </tr>
                         {% endif %}
                     </tbody>
                 </table>
             </div>
         </div>
-    </div>
-</div>
+
+    </div><!-- end dashboard-wrapper -->
+</div><!-- end page-container -->
 
 <script>
     (function () {
-        const dateInput = document.getElementById("gameDateInput");
-        const loadBtn = document.getElementById("loadTeamsBtn");
+        const dateInput   = document.getElementById("gameDateInput");
+        const loadBtn     = document.getElementById("loadTeamsBtn");
         const resultsBody = document.getElementById("resultsBody");
-        const submitBtn = document.getElementById("submitResultsBtn");
-        const statusText = document.getElementById("pointsStatus");
+        const submitBtn   = document.getElementById("submitResultsBtn");
+        const statusText  = document.getElementById("pointsStatus");
 
         dateInput.value = new Date().toISOString().split("T")[0];
 
         async function loadTeams() {
             const date = dateInput.value;
             statusText.textContent = "Loading...";
-
             try {
                 const resp = await fetch(`/get_locked_teams?date=${date}`);
                 const data = await resp.json();
-
                 if (!resp.ok || !data.teams || Object.keys(data.teams).length === 0) {
                     resultsBody.innerHTML =
                         '<tr><td colspan="4" class="placeholder">No locked teams for this date.</td></tr>';
@@ -249,40 +331,36 @@
                 players.forEach((p) => {
                     const tr = document.createElement("tr");
                     tr.dataset.playerId = p.player_id || p.id;
-                    const name = p.name || p.Player || p.player || "Unknown";
+                    const name  = p.name || p.Player || p.player || "Unknown";
                     const color = teamName === "Orange" ? "#ea580c" : "#ca8a04";
-
                     tr.innerHTML = `
-                    <td>${i++}</td>
-                    <td style="font-weight:bold; color: ${color}">${teamName}</td>
-                    <td class="player-name">${name}</td>
-                    <td>
-                        <select class="modern-input points-select" style="padding: 4px;">
-                            <option value="0">0</option>
-                            <option value="1">1</option>
-                            <option value="3">3</option>
-                        </select>
-                    </td>`;
+                        <td>${i++}</td>
+                        <td style="font-weight:bold; color:${color}">${teamName}</td>
+                        <td class="player-name">${name}</td>
+                        <td>
+                            <select class="modern-input points-select" style="padding:4px;">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="3">3</option>
+                            </select>
+                        </td>`;
                     resultsBody.appendChild(tr);
                 });
             });
-
             resultsBody.querySelectorAll(".points-select").forEach((s) => (s.onchange = validate));
             validate();
         }
 
         function validate() {
             const selects = Array.from(resultsBody.querySelectorAll(".points-select"));
-            const total = selects.reduce((sum, s) => sum + parseInt(s.value), 0);
-            const count = selects.length;
-
-            let allowed = count === 12 ? [12, 18] : count === 10 ? [10, 15] : [count];
-            const isOk = allowed.includes(total);
-
-            statusText.textContent = `Total Points: ${total}`;
-            statusText.style.background = isOk ? "#dcfce7" : "#fee2e2";
-            statusText.style.color = isOk ? "#166534" : "#991b1b";
-            submitBtn.disabled = !isOk;
+            const total   = selects.reduce((sum, s) => sum + parseInt(s.value), 0);
+            const count   = selects.length;
+            const allowed = count === 12 ? [12, 18] : count === 10 ? [10, 15] : [count];
+            const isOk    = allowed.includes(total);
+            statusText.textContent       = `Total Points: ${total}`;
+            statusText.style.background  = isOk ? "#dcfce7" : "#fee2e2";
+            statusText.style.color       = isOk ? "#166534" : "#991b1b";
+            submitBtn.disabled           = !isOk;
         }
 
         submitBtn.onclick = async () => {
@@ -290,13 +368,13 @@
                 Date: dateInput.value,
                 results: Array.from(resultsBody.querySelectorAll("tr")).map((tr) => ({
                     player_id: parseInt(tr.dataset.playerId),
-                    points: parseInt(tr.querySelector(".points-select").value),
+                    points:    parseInt(tr.querySelector(".points-select").value),
                 })),
             };
             const resp = await fetch("/results", {
-                method: "POST",
+                method:  "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+                body:    JSON.stringify(payload),
             });
             if (resp.ok) window.location.reload();
             else alert("Submission failed.");
