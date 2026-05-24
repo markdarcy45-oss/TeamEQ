@@ -870,6 +870,11 @@ def statistics_page():
     conn = get_db_connection()
     cur = conn.cursor()
 
+    # Fetch game name for page header
+    cur.execute("SELECT name FROM game_names WHERE id = %s", (game_id,))
+    game_row = cur.fetchone()
+    game_name = game_row["name"] if game_row else "League Analytics"
+
     # Initialize variables
     total_matches = 0
     active_players = 0
@@ -940,9 +945,12 @@ def statistics_page():
                 SUM(CASE WHEN r.points = 3 THEN 1 ELSE 0 END) as wins
             FROM players p
             JOIN results r ON p.id = r.player_id
+            JOIN ppg_standings ps ON p.id = ps.player_id 
+                AND p.game_id = ps.game_id
             WHERE p.game_id = %s 
                 AND p.active = 1 
                 AND r.points IS NOT NULL
+                AND ps.status = 'Eligible'
             GROUP BY p.id, p.name
             HAVING COUNT(DISTINCT r.match_date) > 0
             ORDER BY (CAST(SUM(CASE WHEN r.points = 3 THEN 1 ELSE 0 END) AS FLOAT) / COUNT(DISTINCT r.match_date)) DESC
@@ -989,7 +997,11 @@ def statistics_page():
                     SELECT COUNT(DISTINCT r.match_date) as streak
                     FROM players p
                     JOIN results r ON p.id = r.player_id
-                    WHERE p.game_id = %s AND r.points IS NOT NULL
+                    JOIN ppg_standings ps ON p.id = ps.player_id
+                        AND p.game_id = ps.game_id
+                    WHERE p.game_id = %s 
+                        AND r.points IS NOT NULL
+                        AND ps.status = 'Eligible'
                     GROUP BY p.id
                 ) x
                 """,
@@ -1005,7 +1017,11 @@ def statistics_page():
                     SELECT p.name, COUNT(DISTINCT r.match_date) as streak
                     FROM players p
                     JOIN results r ON p.id = r.player_id
-                    WHERE p.game_id = %s AND r.points IS NOT NULL
+                    JOIN ppg_standings ps ON p.id = ps.player_id
+                        AND p.game_id = ps.game_id
+                    WHERE p.game_id = %s 
+                        AND r.points IS NOT NULL
+                        AND ps.status = 'Eligible'
                     GROUP BY p.id, p.name
                     HAVING COUNT(DISTINCT r.match_date) = %s
                     ORDER BY p.name
@@ -1039,7 +1055,11 @@ def statistics_page():
                         ROW_NUMBER() OVER (PARTITION BY p.id ORDER BY r.match_date) as rn
                     FROM players p
                     JOIN results r ON p.id = r.player_id
-                    WHERE p.game_id = %s AND r.points IS NOT NULL
+                    JOIN ppg_standings ps ON p.id = ps.player_id
+                        AND p.game_id = ps.game_id
+                    WHERE p.game_id = %s 
+                        AND r.points IS NOT NULL
+                        AND ps.status = 'Eligible'
                 ),
                 streaks AS (
                     SELECT 
@@ -1083,7 +1103,11 @@ def statistics_page():
                         ROW_NUMBER() OVER (PARTITION BY p.id ORDER BY r.match_date) as rn
                     FROM players p
                     JOIN results r ON p.id = r.player_id
-                    WHERE p.game_id = %s AND r.points IS NOT NULL
+                    JOIN ppg_standings ps ON p.id = ps.player_id
+                        AND p.game_id = ps.game_id
+                    WHERE p.game_id = %s 
+                        AND r.points IS NOT NULL
+                        AND ps.status = 'Eligible'
                 ),
                 streaks AS (
                     SELECT 
@@ -1221,7 +1245,9 @@ def statistics_page():
         }
 
         return render_template(
-            "statistics.html", stats=stats if total_matches > 0 else None
+            "statistics.html",
+            stats=stats if total_matches > 0 else None,
+            game_name=game_name,
         )
 
     except Exception as e:
@@ -1229,7 +1255,7 @@ def statistics_page():
         import traceback
 
         traceback.print_exc()
-        return render_template("statistics.html", stats=None)
+        return render_template("statistics.html", stats=None, game_name=game_name)
 
     finally:
         if conn:
