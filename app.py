@@ -17,6 +17,7 @@ from flask import (
     url_for,
     session,
     jsonify,
+    flash,
     send_from_directory,
 )
 from flask_login import (
@@ -221,12 +222,12 @@ def register():
         password = request.form.get("password")
         code = request.form.get("invite_code")
 
-        if not username or not password or not code:
-            flash("Please fill in all fields", "error")
+        if not username or not password:
+            flash("Please fill in username and password", "error")
             return render_template("login.html", username=username)
 
         # 1. Determine Identity & Global Role
-        is_global_admin = code == MASTER_INVITE_CODE
+        is_global_admin = (code == MASTER_INVITE_CODE) or (not code)
 
         conn = get_db_connection()
         cur = conn.cursor()
@@ -244,13 +245,14 @@ def register():
             )
             user_id = cur.fetchone()["id"]
 
-            # 2. Handle Membership for Non-Global Admins
-            if not is_global_admin:
+            # 2. Handle Membership only if a code was provided
+            if code and not is_global_admin:
                 cur.execute("SELECT id FROM game_names WHERE invite_code = %s", (code,))
                 game = cur.fetchone()
                 if not game:
                     conn.rollback()
-                    return "Invalid Invite Code", 400
+                    flash("Invalid League Invite Code", "error")
+                    return render_template("login.html", username=username)
 
                 # Add to game_members as 'Read-only'
                 cur.execute(
@@ -258,11 +260,19 @@ def register():
                     (user_id, game["id"]),
                 )
 
+            # ... existing register logic ...
             conn.commit()
-            return redirect(url_for("login"))
+
+            # 3. Auto-login the new user so they see the welcome message immediately
+            user_obj = User(user_id, username, is_global_admin)
+            login_user(user_obj)
+
+            # 4. Trigger the welcome message flag
+            session["show_welcome"] = True
+            session.modified = True
+            return redirect(url_for("players_page_render") + "?welcome=1")
         finally:
             conn.close()
-    return render_template("login.html")
 
 
 @app.route("/api/join_game", methods=["POST"])
@@ -402,14 +412,15 @@ def group_page():
             user_member_data = cur.fetchone()
             is_page_admin = user_member_data and user_member_data["role"] == "Admin"
 
-        return render_template(
-            "group.html",
-            members=members,
-            game_name=game_name,
-            is_page_admin=is_page_admin,
-        )
     finally:
         conn.close()
+
+        return render_template(
+            "group.html",
+            game_name=game_name,
+            members=members,
+            is_page_admin=is_page_admin,
+        )
 
 
 @app.route("/delete-account")
@@ -432,8 +443,12 @@ def logout():
 @app.route("/players", methods=["GET"])
 @login_required
 def players_page_render():
-    # Pass the current session's active game to the template
-    return render_template("players.html", active_game_id=session.get("active_game_id"))
+    show_welcome = session.pop("show_welcome", False)
+    return render_template(
+        "players.html",
+        active_game_id=session.get("active_game_id"),
+        show_welcome=show_welcome,
+    )
 
 
 @app.route("/api/games")
