@@ -55,6 +55,29 @@
         box-sizing: border-box;
     }
 
+    .pw-wrapper {
+        position: relative;
+    }
+
+    .pw-wrapper .modern-input {
+        padding-right: 42px;
+    }
+
+    .pw-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: var(--text-muted);
+        font-size: 1rem;
+        user-select: none;
+        background: none;
+        border: none;
+        padding: 0;
+        line-height: 1;
+    }
+
     .btn {
         width: 100%;
         padding: 12px;
@@ -93,6 +116,7 @@
             <button onclick="showAuth('register')" id="register-tab" class="tab-btn">Register</button>
         </div>
 
+        <!-- ====== SIGN IN FORM ====== -->
         <div id="login-form">
             <h2 style="margin-top: 0; margin-bottom: 20px; font-size: 1.25rem">Welcome Back</h2>
             <form method="POST" action="{{ url_for('login') }}">
@@ -102,18 +126,29 @@
                 </div>
                 <div class="form-row">
                     <label>Password</label>
-                    <input
-                        type="password"
-                        name="password"
-                        required
-                        class="modern-input"
-                        autocomplete="current-password"
-                    />
+                    <div class="pw-wrapper">
+                        <input
+                            type="password"
+                            name="password"
+                            id="login-password"
+                            required
+                            class="modern-input"
+                            autocomplete="current-password"
+                        />
+                        <button
+                            type="button"
+                            class="pw-toggle"
+                            id="login-eye"
+                            onclick="togglePassword('login-password', 'login-eye')"
+                            aria-label="Show password"
+                        >👁️</button>
+                    </div>
                 </div>
                 <button type="submit" class="btn primary">Sign In</button>
             </form>
         </div>
 
+        <!-- ====== REGISTER FORM ====== -->
         <div id="register-form" style="display: none">
             <h2 style="margin-top: 0; margin-bottom: 20px; font-size: 1.25rem">Create Account</h2>
             <form method="POST" action="{{ url_for('register') }}">
@@ -123,47 +158,84 @@
                 </div>
                 <div class="form-row">
                     <label>Set Password</label>
-                    <input type="password" name="password" required class="modern-input" autocomplete="new-password" />
+                    <div class="pw-wrapper">
+                        <input
+                            type="password"
+                            name="password"
+                            id="reg-password"
+                            required
+                            class="modern-input"
+                            autocomplete="new-password"
+                        />
+                        <button
+                            type="button"
+                            class="pw-toggle"
+                            id="reg-eye"
+                            onclick="togglePassword('reg-password', 'reg-eye')"
+                            aria-label="Show password"
+                        >👁️</button>
+                    </div>
                 </div>
                 <div class="form-row">
-                    <label>Invite Code</label>
+                    <label>Invite Code
+                        <span style="font-weight:400; color:var(--text-muted);
+                                     font-size:0.8rem;">(Optional)</span>
+                    </label>
                     <input
                         type="text"
                         name="invite_code"
                         id="reg_invite_code"
-                        required
                         class="modern-input"
-                        placeholder="Enter league code"
+                        placeholder="Leave blank to create a new league"
                         style="text-transform: uppercase"
                     />
+                    <small style="color:var(--text-muted); font-size:0.78rem;
+                                  margin-top:4px; display:block;">
+                        Have a league code? Enter it to join an existing league.
+                    </small>
                 </div>
                 <button type="submit" class="btn success">Create Account</button>
             </form>
         </div>
+
     </div>
 </div>
 
 <script>
+    function togglePassword(inputId, btnId) {
+        const input = document.getElementById(inputId);
+        const btn   = document.getElementById(btnId);
+        if (input.type === 'password') {
+            input.type      = 'text';
+            btn.textContent = '🙈';
+            btn.setAttribute('aria-label', 'Hide password');
+        } else {
+            input.type      = 'password';
+            btn.textContent = '👁️';
+            btn.setAttribute('aria-label', 'Show password');
+        }
+    }
+
     function showAuth(type) {
-        const loginForm = document.getElementById("login-form");
+        const loginForm    = document.getElementById("login-form");
         const registerForm = document.getElementById("register-form");
-        const loginTab = document.getElementById("login-tab");
-        const registerTab = document.getElementById("register-tab");
+        const loginTab     = document.getElementById("login-tab");
+        const registerTab  = document.getElementById("register-tab");
 
         if (type === "login") {
-            loginForm.style.display = "block";
+            loginForm.style.display    = "block";
             registerForm.style.display = "none";
-            loginTab.style.borderBottom = "2px solid var(--primary)";
-            loginTab.style.color = "var(--primary)";
+            loginTab.style.borderBottom  = "2px solid var(--primary)";
+            loginTab.style.color         = "var(--primary)";
             registerTab.style.borderBottom = "none";
-            registerTab.style.color = "var(--text-muted)";
+            registerTab.style.color        = "var(--text-muted)";
         } else {
-            loginForm.style.display = "none";
+            loginForm.style.display    = "none";
             registerForm.style.display = "block";
             registerTab.style.borderBottom = "2px solid var(--success)";
-            registerTab.style.color = "var(--success)";
-            loginTab.style.borderBottom = "none";
-            loginTab.style.color = "var(--text-muted)";
+            registerTab.style.color        = "var(--success)";
+            loginTab.style.borderBottom  = "none";
+            loginTab.style.color         = "var(--text-muted)";
         }
     }
 </script>
