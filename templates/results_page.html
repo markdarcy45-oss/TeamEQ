@@ -134,9 +134,23 @@
         font-style: italic;
     }
 
-    .form-w { color: #166534; font-weight: 700; font-size: 0.75rem; }
-    .form-d { color: #92400e; font-weight: 700; font-size: 0.75rem; }
-    .form-l { color: #991b1b; font-weight: 700; font-size: 0.75rem; }
+    .form-w {
+        color: #166534;
+        font-weight: 700;
+        font-size: 0.75rem;
+    }
+
+    .form-d {
+        color: #92400e;
+        font-weight: 700;
+        font-size: 0.75rem;
+    }
+
+    .form-l {
+        color: #991b1b;
+        font-weight: 700;
+        font-size: 0.75rem;
+    }
 </style>
 
 <div class="page-container">
@@ -205,81 +219,80 @@
                     <tbody>
                         {% if standings %}
 
-                            <!-- ELIGIBLE PLAYERS -->
-                            {% for r in standings if r['status'] == 'Eligible' %}
-                            <tr>
-                                <td class="player-name">{{ r['player'] or '—' }}</td>
-                                <td class="num">{{ r['mp'] or 0 }}</td>
-                                <td class="num">{{ r['wins'] or 0 }}</td>
-                                <td class="num">{{ r['draws'] or 0 }}</td>
-                                <td class="num">{{ r['losses'] or 0 }}</td>
-                                <td class="num" style="font-weight:bold; color:var(--primary)">
-                                    {{ r['points'] or 0 }}
-                                </td>
-                                <td class="num" style="font-weight:bold;">
-                                    {{ r['ppg'] or '—' }}
-                                </td>
-                                <td class="num">
-                                    {% if r['form'] %}
-                                        {% for ch in r['form'] %}
-                                            {% if ch == 'W' %}<span class="form-w">W</span>
-                                            {% elif ch == 'D' %}<span class="form-d">D</span>
-                                            {% else %}<span class="form-l">L</span>
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% else %}—{% endif %}
-                                </td>
-                                <td class="num">
-                                    <span style="background:#e2e8f0; padding:2px 8px;
+                        <!-- ELIGIBLE PLAYERS -->
+                        {% for r in standings if r['status'] == 'Eligible' %}
+                        <tr>
+                            <td class="player-name">{{ r['player'] or '—' }}</td>
+                            <td class="num">{{ r['mp'] or 0 }}</td>
+                            <td class="num">{{ r['wins'] or 0 }}</td>
+                            <td class="num">{{ r['draws'] or 0 }}</td>
+                            <td class="num">{{ r['losses'] or 0 }}</td>
+                            <td class="num" style="font-weight:bold; color:var(--primary)">
+                                {{ r['points'] or 0 }}
+                            </td>
+                            <td class="num" style="font-weight:bold;">
+                                {{ r['ppg'] or '—' }}
+                            </td>
+                            <td class="num">
+                                {% if r['form'] %}
+                                {% for ch in r['form'] %}
+                                {% if ch == 'W' %}<span class="form-w">W</span>
+                                {% elif ch == 'D' %}<span class="form-d">D</span>
+                                {% else %}<span class="form-l">L</span>
+                                {% endif %}
+                                {% endfor %}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td class="num">
+                                <span style="background:#e2e8f0; padding:2px 8px;
                                                  border-radius:10px; font-size:0.8rem;">
-                                        {{ r['ppg_rank'] or '—' }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% endfor %}
+                                    {{ r['ppg_rank'] or '—' }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
 
-                            <!-- PROVISIONAL DIVIDER + ROWS -->
-                            {% set provisional = standings | selectattr('status', 'equalto', 'Provisional') | list %}
-                            {% if provisional %}
-                            <tr>
-                                <td colspan="9"
-                                    style="padding:6px 12px; font-size:0.75rem;
+                        <!-- PROVISIONAL DIVIDER + ROWS -->
+                        {% set provisional = standings | selectattr('status', 'equalto', 'Provisional') | list %}
+                        {% if provisional %}
+                        <tr>
+                            <td colspan="9" style="padding:6px 12px; font-size:0.75rem;
                                            color:var(--text-muted); background:#f8fafc;
                                            font-style:italic; text-align:left;">
-                                    Provisional — more games needed to qualify for ranking
-                                </td>
-                            </tr>
-                            {% for r in provisional %}
-                            <tr style="opacity:0.55;">
-                                <td class="player-name">{{ r['player'] or '—' }}</td>
-                                <td class="num">{{ r['mp'] or 0 }}</td>
-                                <td class="num">{{ r['wins'] or 0 }}</td>
-                                <td class="num">{{ r['draws'] or 0 }}</td>
-                                <td class="num">{{ r['losses'] or 0 }}</td>
-                                <td class="num" style="font-weight:bold; color:var(--primary)">
-                                    {{ r['points'] or 0 }}
-                                </td>
-                                <td class="num">{{ r['ppg'] or '—' }}</td>
-                                <td class="num">
-                                    {% if r['form'] %}
-                                        {% for ch in r['form'] %}
-                                            {% if ch == 'W' %}<span class="form-w">W</span>
-                                            {% elif ch == 'D' %}<span class="form-d">D</span>
-                                            {% else %}<span class="form-l">L</span>
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% else %}—{% endif %}
-                                </td>
-                                <td class="num">
-                                    <span style="background:#f1f5f9; padding:2px 8px;
+                                Provisional — more games needed to qualify for ranking
+                            </td>
+                        </tr>
+                        {% for r in provisional %}
+                        <tr style="opacity:0.55;">
+                            <td class="player-name">{{ r['player'] or '—' }}</td>
+                            <td class="num">{{ r['mp'] or 0 }}</td>
+                            <td class="num">{{ r['wins'] or 0 }}</td>
+                            <td class="num">{{ r['draws'] or 0 }}</td>
+                            <td class="num">{{ r['losses'] or 0 }}</td>
+                            <td class="num" style="font-weight:bold; color:var(--primary)">
+                                {{ r['points'] or 0 }}
+                            </td>
+                            <td class="num">{{ r['ppg'] or '—' }}</td>
+                            <td class="num">
+                                {% if r['form'] %}
+                                {% for ch in r['form'] %}
+                                {% if ch == 'W' %}<span class="form-w">W</span>
+                                {% elif ch == 'D' %}<span class="form-d">D</span>
+                                {% else %}<span class="form-l">L</span>
+                                {% endif %}
+                                {% endfor %}
+                                {% else %}—{% endif %}
+                            </td>
+                            <td class="num">
+                                <span style="background:#f1f5f9; padding:2px 8px;
                                                  border-radius:10px; font-size:0.75rem;
                                                  color:var(--text-muted);">
-                                        —
-                                    </span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                            {% endif %}
+                                    —
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
 
                         {% else %}
                         <tr>
@@ -295,12 +308,12 @@
 </div><!-- end page-container -->
 
 <script>
-    (function () {
-        const dateInput   = document.getElementById("gameDateInput");
-        const loadBtn     = document.getElementById("loadTeamsBtn");
+    (function() {
+        const dateInput = document.getElementById("gameDateInput");
+        const loadBtn = document.getElementById("loadTeamsBtn");
         const resultsBody = document.getElementById("resultsBody");
-        const submitBtn   = document.getElementById("submitResultsBtn");
-        const statusText  = document.getElementById("pointsStatus");
+        const submitBtn = document.getElementById("submitResultsBtn");
+        const statusText = document.getElementById("pointsStatus");
 
         dateInput.value = new Date().toISOString().split("T")[0];
 
@@ -310,7 +323,7 @@
             try {
                 const resp = await fetch(`/get_locked_teams?date=${date}`);
                 const data = await resp.json();
-                if (!resp.ok || !data.teams || Object.keys(data.teams).length === 0) {
+                if (!resp.ok || !data.teams || data.teams.length === 0) {
                     resultsBody.innerHTML =
                         '<tr><td colspan="4" class="placeholder">No locked teams for this date.</td></tr>';
                     submitBtn.disabled = true;
@@ -326,41 +339,46 @@
         function renderInputRows(teams) {
             resultsBody.innerHTML = "";
             let i = 1;
-            ["Orange", "Yellow"].forEach((teamName) => {
-                const players = teams[teamName] || [];
-                players.forEach((p) => {
+            // Two neutral colours: one per team slot regardless of name
+            const teamColors = ["#3b82f6", "#64748b"];
+
+            teams.forEach((team, idx) => {
+                const teamName = team.team_name || `Team ${idx + 1}`;
+                const color = teamColors[idx] || "#475569";
+
+                team.players.forEach((p) => {
                     const tr = document.createElement("tr");
                     tr.dataset.playerId = p.player_id || p.id;
-                    const name  = p.name || p.Player || p.player || "Unknown";
-                    const color = teamName === "Orange" ? "#ea580c" : "#ca8a04";
+                    const name = p.name || p.Player || p.player || "Unknown";
                     tr.innerHTML = `
-                        <td>${i++}</td>
-                        <td style="font-weight:bold; color:${color}">${teamName}</td>
-                        <td class="player-name">${name}</td>
-                        <td>
-                            <select class="modern-input points-select" style="padding:4px;">
-                                <option value="0">0</option>
-                                <option value="1">1</option>
-                                <option value="3">3</option>
-                            </select>
-                        </td>`;
+                <td>${i++}</td>
+                <td style="font-weight:bold; color:${color}">${teamName}</td>
+                <td class="player-name">${name}</td>
+                <td>
+                    <select class="modern-input points-select" style="padding:4px;">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="3">3</option>
+                    </select>
+                </td>`;
                     resultsBody.appendChild(tr);
                 });
             });
+
             resultsBody.querySelectorAll(".points-select").forEach((s) => (s.onchange = validate));
             validate();
         }
 
         function validate() {
             const selects = Array.from(resultsBody.querySelectorAll(".points-select"));
-            const total   = selects.reduce((sum, s) => sum + parseInt(s.value), 0);
-            const count   = selects.length;
+            const total = selects.reduce((sum, s) => sum + parseInt(s.value), 0);
+            const count = selects.length;
             const allowed = count === 12 ? [12, 18] : count === 10 ? [10, 15] : [count];
-            const isOk    = allowed.includes(total);
-            statusText.textContent       = `Total Points: ${total}`;
-            statusText.style.background  = isOk ? "#dcfce7" : "#fee2e2";
-            statusText.style.color       = isOk ? "#166534" : "#991b1b";
-            submitBtn.disabled           = !isOk;
+            const isOk = allowed.includes(total);
+            statusText.textContent = `Total Points: ${total}`;
+            statusText.style.background = isOk ? "#dcfce7" : "#fee2e2";
+            statusText.style.color = isOk ? "#166534" : "#991b1b";
+            submitBtn.disabled = !isOk;
         }
 
         submitBtn.onclick = async () => {
@@ -368,13 +386,15 @@
                 Date: dateInput.value,
                 results: Array.from(resultsBody.querySelectorAll("tr")).map((tr) => ({
                     player_id: parseInt(tr.dataset.playerId),
-                    points:    parseInt(tr.querySelector(".points-select").value),
+                    points: parseInt(tr.querySelector(".points-select").value),
                 })),
             };
             const resp = await fetch("/results", {
-                method:  "POST",
-                headers: { "Content-Type": "application/json" },
-                body:    JSON.stringify(payload),
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload),
             });
             if (resp.ok) window.location.reload();
             else alert("Submission failed.");
