@@ -36,17 +36,17 @@
             <h2 class="section-title">Matchup</h2>
 
             <div class="teams-display">
-                <div class="team-card orange">
+                <div class="team-card team-a">
                     <div class="team-header">
-                        <input type="text" id="team1Name" class="team-name-input" value="Orange" required />
+                        <input type="text" id="team1Name" class="team-name-input" placeholder="Team name..." required />
                         <span id="team1Total" class="total-pill">0</span>
                     </div>
                     <ul id="team1List" class="team-roster"></ul>
                 </div>
 
-                <div class="team-card yellow">
+                <div class="team-card team-b">
                     <div class="team-header">
-                        <input type="text" id="team2Name" class="team-name-input" value="Yellow" required />
+                        <input type="text" id="team2Name" class="team-name-input" placeholder="Team name..." required />
                         <span id="team2Total" class="total-pill">0</span>
                     </div>
                     <ul id="team2List" class="team-roster"></ul>
@@ -59,11 +59,11 @@
                 <h3>Manual Swap</h3>
                 <div class="swap-controls">
                     <select id="swapA" class="modern-input">
-                        <option value="">Orange Player</option>
+                        <opt<option value="">Team A Player</option>
                     </select>
                     <div class="swap-icon">⇌</div>
                     <select id="swapB" class="modern-input">
-                        <option value="">Yellow Player</option>
+                        <option value="">Team B Player</option>
                     </select>
                     <button id="swapBtn" class="btn secondary" disabled>Swap</button>
                 </div>
@@ -84,7 +84,7 @@
 </div>
 
 <script id="players-data" type="application/json">
-    {{ players | tojson }}
+{{ players | tojson }}
 </script>
 
 <style>
@@ -93,12 +93,14 @@
         background: #f8fafc;
         min-height: 100vh;
     }
+
     .panel-grid {
         display: flex;
         gap: 24px;
         max-width: 1200px;
         margin: 0 auto;
     }
+
     .panel {
         background: #fff;
         border: 1px solid var(--border);
@@ -106,32 +108,39 @@
         padding: 20px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
+
     .selection-panel {
         width: 340px;
         flex-shrink: 0;
     }
+
     .teams-panel {
         flex-grow: 1;
     }
+
     .section-title {
         margin-top: 0;
         font-size: 1.2rem;
     }
+
     .input-group {
         margin-bottom: 15px;
     }
+
     .input-group label {
         display: block;
         font-size: 0.85rem;
         font-weight: bold;
         margin-bottom: 5px;
     }
+
     .modern-input {
         width: 100%;
         padding: 8px;
         border-radius: 6px;
         border: 1px solid var(--border);
     }
+
     .selection-header {
         display: flex;
         justify-content: space-between;
@@ -150,6 +159,7 @@
         font-weight: 600;
         transition: all 0.2s;
     }
+
     .text-btn:hover {
         background: #e2e8f0;
         color: var(--primary);
@@ -162,12 +172,14 @@
         border-radius: 6px;
         margin-bottom: 15px;
     }
+
     .player-item {
         display: flex;
         align-items: center;
         padding: 8px 12px;
         border-bottom: 1px solid #f1f5f9;
     }
+
     .player-item label {
         flex: 1;
         display: flex;
@@ -175,80 +187,90 @@
         align-items: center;
         cursor: pointer;
     }
+
     .rank-pill {
         font-size: 0.7rem;
         background: #e2e8f0;
         padding: 2px 6px;
         border-radius: 10px;
     }
+
     .teams-display {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 15px;
     }
+
     .team-card {
         border: 1px solid var(--border);
         border-radius: 8px;
         overflow: hidden;
     }
+
     .team-header {
         padding: 10px;
         display: flex;
         justify-content: space-between;
         background: #f8fafc;
     }
-    .orange .team-header {
-        border-bottom: 3px solid #fb923c;
-    }
-    .yellow .team-header {
-        border-bottom: 3px solid #facc15;
-    }
-    .team-name-input {
-        /* Remove default styling to make it look like text */
-        background: transparent;
-        border: 1px solid transparent;
-        border-radius: 4px;
 
-        /* Inherit header font traits */
+    .team-name-input {
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid #cbd5e1;
+        border-radius: 0;
         font-size: 1.1rem;
         font-weight: 700;
         color: #1e293b;
-
-        /* Layout management */
-        width: 75%;
-        padding: 2px 6px;
-        transition: all 0.2s ease;
+        padding: 4px 2px;
+        outline: none;
+        flex: 1;
+        min-width: 0;
         cursor: pointer;
     }
 
-    /* Visual feedback only on interaction */
     .team-name-input:hover {
-        background: rgba(255, 255, 255, 0.6);
-        border-color: #cbd5e1;
+        border-bottom-color: #94a3b8;
     }
 
-    .team-name-input:focus {
-        background: #fff;
-        border-color: var(--primary);
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+	.team-name-input:focus {
+    border-bottom: 2px solid #f59e0b;
+	}
+	
+	}
         cursor: text;
     }
+
+    .team-name-input::placeholder {
+        color: #94a3b8;
+        font-weight: 400;
+    }
+
+	.team-a .team-header {
+    border-bottom: 3px solid #f59e0b;
+	}
+	.team-b .team-header {
+    border-bottom: 3px solid #64748b;
+	}
+
     .team-roster {
         list-style: none;
         padding: 0;
         margin: 0;
         min-height: 150px;
     }
+
     .team-roster li {
         padding: 8px 12px;
         border-bottom: 1px solid #f1f5f9;
         display: flex;
         justify-content: space-between;
     }
+
     .total-pill {
         font-weight: bold;
     }
+
     .balance-bar {
         margin: 15px 0;
         padding: 10px;
@@ -256,6 +278,7 @@
         border-radius: 6px;
         text-align: center;
     }
+
     .control-card {
         margin-top: 20px;
         padding: 15px;
@@ -263,12 +286,14 @@
         border-radius: 8px;
         background: #fafafa;
     }
+
     .control-card h3 {
         font-size: 0.8rem;
         color: var(--text-muted);
         text-transform: uppercase;
         margin-top: 0;
     }
+
     .btn {
         padding: 10px;
         border-radius: 6px;
@@ -277,31 +302,38 @@
         font-weight: bold;
         display: inline-block;
     }
+
     .btn.primary {
         background: var(--primary);
         color: white;
     }
+
     .btn.success {
         background: var(--success);
         color: white;
     }
+
     .btn.warning {
         background: var(--warning);
         color: white;
     }
+
     .btn.secondary {
         background: white;
         border: 1px solid var(--border);
     }
+
     .full-width {
         width: 100%;
         display: block;
     }
+
     .swap-controls {
         display: flex;
         align-items: center;
         gap: 10px;
     }
+
     .lock-feedback {
         margin-top: 10px;
         font-size: 0.9rem;
@@ -310,25 +342,25 @@
 </style>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const dateInput = document.getElementById("gameDate");
-        const playerListEl = document.getElementById("playerList");
-        const numPlayersSel = document.getElementById("numPlayers");
-        const generateBtn = document.getElementById("generateBtn");
-        const lockBtn = document.getElementById("lockBtn");
-        const unlockBtn = document.getElementById("unlockBtn");
-        const lockMsg = document.getElementById("lockMsg");
+    document.addEventListener("DOMContentLoaded", function() {
+                const dateInput = document.getElementById("gameDate");
+                const playerListEl = document.getElementById("playerList");
+                const numPlayersSel = document.getElementById("numPlayers");
+                const generateBtn = document.getElementById("generateBtn");
+                const lockBtn = document.getElementById("lockBtn");
+                const unlockBtn = document.getElementById("unlockBtn");
+                const lockMsg = document.getElementById("lockMsg");
 
-        let players = JSON.parse(document.getElementById("players-data").textContent || "[]");
-        window.currentTeam1 = [];
-        window.currentTeam2 = [];
+                let players = JSON.parse(document.getElementById("players-data").textContent || "[]");
+                window.currentTeam1 = [];
+                window.currentTeam2 = [];
 
-        // 1. CLEAN RENDER PLAYER LIST (SORTED)
-        function renderPlayerList() {
-            players.sort((a, b) => (a.player || "").localeCompare(b.player || ""));
-            playerListEl.innerHTML = players
-                .map(
-                    (p) => `
+                // 1. CLEAN RENDER PLAYER LIST (SORTED)
+                function renderPlayerList() {
+                    players.sort((a, b) => (a.player || "").localeCompare(b.player || ""));
+                    playerListEl.innerHTML = players
+                        .map(
+                            (p) => `
                     <div class="player-item">
                         <label>
                             <div style="display:flex; align-items:center;">
@@ -339,170 +371,207 @@
                         </label>
                     </div>
                 `
-                )
-                .join("");
+                        )
+                        .join("");
 
-            playerListEl.querySelectorAll(".player-cb").forEach((cb) => {
-                cb.addEventListener("change", validateSelection);
-            });
-        }
-
-        function validateSelection() {
-            const selected = playerListEl.querySelectorAll("input:checked").length;
-            const target = parseInt(numPlayersSel.value);
-            document.getElementById("selectedCounter").textContent = `Selected ${selected} / ${target}`;
-            generateBtn.disabled = !(selected === target && dateInput.value);
-        }
-
-        // 2. CLEAN RENDER TEAMS (SORTED)
-        function renderTeams(t1, t2, tot1, tot2, diff) {
-            window.currentTeam1 = t1;
-            window.currentTeam2 = t2;
-
-            // Sort by Rank Ascending (Low-to-High), then Name A-Z
-            const sortByRankAndName = (a, b) => {
-                // If ranks are different, sort by Rank (1, 2, 3...)
-                if (a.rank !== b.rank) {
-                    return a.rank - b.rank;
-                }
-                // If ranks are identical, sort by Name (A-Z)
-                return (a.player || "").localeCompare(b.player || "");
-            };
-
-            const displayT1 = [...t1].sort(sortByRankAndName);
-            const displayT2 = [...t2].sort(sortByRankAndName);
-
-            document.getElementById("team1List").innerHTML = displayT1
-                .map((p) => `<li><span>${p.player}</span><strong>${p.rank}</strong></li>`)
-                .join("");
-            document.getElementById("team2List").innerHTML = displayT2
-                .map((p) => `<li><span>${p.player}</span><strong>${p.rank}</strong></li>`)
-                .join("");
-
-            document.getElementById("team1Total").textContent = tot1;
-            document.getElementById("team2Total").textContent = tot2;
-            document.getElementById("rankDiff").textContent = diff;
-
-            document.getElementById("swapA").innerHTML = displayT1
-                .map((p) => `<option value="${p.player}">${p.player}</option>`)
-                .join("");
-            document.getElementById("swapB").innerHTML = displayT2
-                .map((p) => `<option value="${p.player}">${p.player}</option>`)
-                .join("");
-            document.getElementById("swapBtn").disabled = false;
-        }
-
-        // 3. UI CONTROLS & EVENTS
-        document.getElementById("checkAll").onclick = () => {
-            playerListEl.querySelectorAll("input").forEach((i) => (i.checked = true));
-            validateSelection();
-        };
-        document.getElementById("uncheckAll").onclick = () => {
-            playerListEl.querySelectorAll("input").forEach((i) => (i.checked = false));
-            validateSelection();
-        };
-
-        numPlayersSel.onchange = validateSelection;
-        dateInput.onchange = () => {
-            validateSelection();
-            checkLockStatus();
-        };
-
-        generateBtn.onclick = async () => {
-            const selected = Array.from(playerListEl.querySelectorAll("input:checked")).map((cb) => cb.dataset.name);
-            const resp = await fetch("/generate_teams", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ players: selected, date: dateInput.value }),
-            });
-            const data = await resp.json();
-            renderTeams(data.team1, data.team2, data.total1, data.total2, data.difference);
-        };
-
-        function updateLockUI(isLocked) {
-            if (!lockBtn) return;
-            lockBtn.style.display = isLocked ? "none" : "inline-block";
-            unlockBtn.style.display = isLocked ? "inline-block" : "none";
-            generateBtn.style.display = isLocked ? "none" : "inline-block";
-            lockMsg.textContent = isLocked ? "Teams are finalized." : "";
-            lockMsg.style.color = "green";
-        }
-
-        async function checkLockStatus() {
-            if (!dateInput.value) return;
-            try {
-                const resp = await fetch(`/check_lock?date=${dateInput.value}`);
-                const data = await resp.json();
-                updateLockUI(data.locked);
-                if (data.locked && data.team1) {
-                    renderTeams(data.team1, data.team2, data.total1, data.total2, data.difference);
-                }
-            } catch (e) {
-                console.warn("Check lock status unavailable");
-            }
-        }
-
-        if (lockBtn) {
-            lockBtn.onclick = async () => {
-                const name1 = document.getElementById("team1Name").value.trim();
-                const name2 = document.getElementById("team2Name").value.trim();
-                if (!name1 || !name2) {
-                    alert("Both team names are mandatory.");
-                    return;
+                    playerListEl.querySelectorAll(".player-cb").forEach((cb) => {
+                        cb.addEventListener("change", validateSelection);
+                    });
                 }
 
-                const payload = {
-                    date: dateInput.value,
-                    team1_name: name1,
-                    team2_name: name2,
-                    team1: window.currentTeam1.map((p) => ({ player: p.player })),
-                    team2: window.currentTeam2.map((p) => ({ player: p.player })),
+                function validateSelection() {
+                    const selected = playerListEl.querySelectorAll("input:checked").length;
+                    const target = parseInt(numPlayersSel.value);
+                    document.getElementById("selectedCounter").textContent = `Selected ${selected} / ${target}`;
+                    generateBtn.disabled = !(selected === target && dateInput.value);
+                }
+
+                // 2. CLEAN RENDER TEAMS (SORTED)
+                function renderTeams(t1, t2, tot1, tot2, diff) {
+                    window.currentTeam1 = t1;
+                    window.currentTeam2 = t2;
+
+                    // Sort by Rank Ascending (Low-to-High), then Name A-Z
+                    const sortByRankAndName = (a, b) => {
+                        // If ranks are different, sort by Rank (1, 2, 3...)
+                        if (a.rank !== b.rank) {
+                            return a.rank - b.rank;
+                        }
+                        // If ranks are identical, sort by Name (A-Z)
+                        return (a.player || "").localeCompare(b.player || "");
+                    };
+
+                    const displayT1 = [...t1].sort(sortByRankAndName);
+                    const displayT2 = [...t2].sort(sortByRankAndName);
+
+                    document.getElementById("team1List").innerHTML = displayT1
+                        .map((p) => `<li><span>${p.player}</span><strong>${p.rank}</strong></li>`)
+                        .join("");
+                    document.getElementById("team2List").innerHTML = displayT2
+                        .map((p) => `<li><span>${p.player}</span><strong>${p.rank}</strong></li>`)
+                        .join("");
+
+                    document.getElementById("team1Total").textContent = tot1;
+                    document.getElementById("team2Total").textContent = tot2;
+                    document.getElementById("rankDiff").textContent = diff;
+
+                    document.getElementById("swapA").innerHTML = displayT1
+                        .map((p) => `<option value="${p.player}">${p.player}</option>`)
+                        .join("");
+                    document.getElementById("swapB").innerHTML = displayT2
+                        .map((p) => `<option value="${p.player}">${p.player}</option>`)
+                        .join("");
+                    document.getElementById("swapBtn").disabled = false;
+                }
+
+                // 3. UI CONTROLS & EVENTS
+                document.getElementById("checkAll").onclick = () => {
+                    playerListEl.querySelectorAll("input").forEach((i) => (i.checked = true));
+                    validateSelection();
                 };
-                const resp = await fetch("/lock_teams", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload),
-                });
-                if (resp.ok) updateLockUI(true);
-            };
-        }
+                document.getElementById("uncheckAll").onclick = () => {
+                    playerListEl.querySelectorAll("input").forEach((i) => (i.checked = false));
+                    validateSelection();
+                };
 
-        if (unlockBtn) {
-            unlockBtn.onclick = async () => {
-                const resp = await fetch("/unlock_teams", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ Date: dateInput.value }),
-                });
-                if (resp.ok) updateLockUI(false);
-            };
-        }
+                numPlayersSel.onchange = validateSelection;
+                dateInput.onchange = () => {
+                    validateSelection();
+                    checkLockStatus();
+                };
 
-        document.getElementById("swapBtn").onclick = async () => {
-            const p1 = document.getElementById("swapA").value;
-            const p2 = document.getElementById("swapB").value;
-            const idx1 = window.currentTeam1.findIndex((p) => p.player === p1);
-            const idx2 = window.currentTeam2.findIndex((p) => p.player === p2);
-            const obj1 = window.currentTeam1[idx1];
-            const obj2 = window.currentTeam2[idx2];
-            window.currentTeam1[idx1] = obj2;
-            window.currentTeam2[idx2] = obj1;
+                generateBtn.onclick = async () => {
+                    const selected = Array.from(playerListEl.querySelectorAll("input:checked")).map((cb) => cb.dataset.name);
+                    const resp = await fetch("/generate_teams", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            players: selected,
+                            date: dateInput.value
+                        }),
+                    });
+                    const data = await resp.json();
+                    renderTeams(data.team1, data.team2, data.total1, data.total2, data.difference);
+                };
 
-            const tot1 = window.currentTeam1.reduce((acc, p) => acc + (p.rank || 0), 0);
-            const tot2 = window.currentTeam2.reduce((acc, p) => acc + (p.rank || 0), 0);
-            renderTeams(window.currentTeam1, window.currentTeam2, tot1, tot2, Math.abs(tot1 - tot2));
+                function updateLockUI(isLocked) {
+                    if (!lockBtn) return;
+                    lockBtn.style.display = isLocked ? "none" : "inline-block";
+                    unlockBtn.style.display = isLocked ? "inline-block" : "none";
+                    generateBtn.style.display = isLocked ? "none" : "inline-block";
+                    lockMsg.textContent = isLocked ? "Teams are finalized." : "";
+                    lockMsg.style.color = "green";
+                }
 
-            await fetch("/swap_locked_players", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ Date: dateInput.value, player1: p1, player2: p2 }),
-            });
-        };
+                async function checkLockStatus() {
+                    if (!dateInput.value) return;
+                    try {
+                        const resp = await fetch(`/check_lock?date=${dateInput.value}`);
+                        const data = await resp.json();
+                        updateLockUI(data.locked);
+                        if (data.locked && data.team1) {
+                            renderTeams(data.team1, data.team2, data.total1, data.total2, data.difference);
+                        }
+                    } catch (e) {
+                        console.warn("Check lock status unavailable");
+                    }
+                }
 
-        // Initialize
-        renderPlayerList();
-        if (!dateInput.value) dateInput.value = new Date().toISOString().split("T")[0];
-        checkLockStatus();
-    });
+                if (lockBtn) {
+                    lockBtn.onclick = async () => {
+                        const name1 = document.getElementById("team1Name").value.trim();
+                        const name2 = document.getElementById("team2Name").value.trim();
+                        if (!name1 || !name2) {
+                            alert("Both team names are mandatory.");
+                            return;
+                        }
+
+                        const payload = {
+                            date: dateInput.value,
+                            team1_name: name1,
+                            team2_name: name2,
+                            team1: window.currentTeam1.map((p) => ({
+                                player: p.player
+                            })),
+                            team2: window.currentTeam2.map((p) => ({
+                                player: p.player
+                            })),
+                        };
+                        const resp = await fetch("/lock_teams", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify(payload),
+                        });
+                        if (resp.ok) updateLockUI(true);
+                    };
+                }
+
+                if (unlockBtn) {
+                    unlockBtn.onclick = async () => {
+                        const resp = await fetch("/unlock_teams", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                Date: dateInput.value
+                            }),
+                        });
+                        if (resp.ok) updateLockUI(false);
+                    };
+                }
+
+                document.getElementById("swapBtn").onclick = async () => {
+                    const p1 = document.getElementById("swapA").value;
+                    const p2 = document.getElementById("swapB").value;
+                    const idx1 = window.currentTeam1.findIndex((p) => p.player === p1);
+                    const idx2 = window.currentTeam2.findIndex((p) => p.player === p2);
+                    const obj1 = window.currentTeam1[idx1];
+                    const obj2 = window.currentTeam2[idx2];
+                    window.currentTeam1[idx1] = obj2;
+                    window.currentTeam2[idx2] = obj1;
+
+                    const tot1 = window.currentTeam1.reduce((acc, p) => acc + (p.rank || 0), 0);
+                    const tot2 = window.currentTeam2.reduce((acc, p) => acc + (p.rank || 0), 0);
+                    renderTeams(window.currentTeam1, window.currentTeam2, tot1, tot2, Math.abs(tot1 - tot2));
+
+                    await fetch("/swap_locked_players", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                            Date: dateInput.value,
+                            player1: p1,
+                            player2: p2
+                        }),
+                    });
+                };
+
+                // Initialize
+                renderPlayerList();
+                dateInput.value = new Date().toISOString().split("T")[0];
+                checkLockStatus();
+
+                // Pre-populate team names from most recent locked game
+                (async () => {
+                    try {
+                        const resp = await fetch("/get_last_team_names");
+                        if (!resp.ok) return;
+                        const data = await resp.json();
+                        if (data.names && data.names.length === 2) {
+                            document.getElementById("team1Name").value = data.names[0];
+                            document.getElementById("team2Name").value = data.names[1];
+                        }
+                    } catch (e) {
+                        // Non-critical — silently ignore if endpoint unavailable
+                    }
+                })();
+
+    }); // end DOMContentLoaded
 </script>
 {% endblock %}
