@@ -570,6 +570,32 @@ def api_players_upsert():
 # 3. TEAM GENERATION & MATCH MANAGEMENT
 # =================================================================
 
+@app.route("/get_last_team_names")
+@login_required
+def get_last_team_names():
+    """Returns the two team names from the most recently locked game."""
+    game_id = session.get("active_game_id")
+    if not game_id:
+        return jsonify({"names": []})
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT DISTINCT team_name
+            FROM locked_teams
+            WHERE game_id = %s
+              AND date = (
+                  SELECT MAX(date) FROM locked_teams WHERE game_id = %s
+              )
+            ORDER BY team_name ASC
+            """,
+            (game_id, game_id),
+        )
+        rows = cur.fetchall()
+        return jsonify({"names": [r["team_name"] for r in rows]})
+    finally:
+        conn.close()
 
 @app.route("/teams")
 @login_required
@@ -601,7 +627,6 @@ def teams_page():
         return render_template("teams.html", players=players)
     finally:
         conn.close()
-
 
 @app.route("/generate_teams", methods=["POST"])
 @login_required
@@ -702,13 +727,15 @@ def lock_teams():
 
     """Saves the final team composition for a specific date."""
     data = request.get_json()
-    game_date, team1, team2 = (
-        data.get("date"),
-        data.get("team1", []),
-        data.get("team2", []),
-    )
+    game_date = data.get("date")
+    team1 = data.get("team1", [])
+    team2 = data.get("team2", [])
+    team1_name = (data.get("team1_name") or "Team A").strip()[:50]
+    team2_name = (data.get("team2_name") or "Team B").strip()[:50]
+
     if not game_date:
         return jsonify({"error": "Missing date"}), 400
+
     conn = get_db_connection()
     try:
         cur = conn.cursor()
@@ -734,8 +761,8 @@ def lock_teams():
                         ),
                     )
 
-        save(team1, "Orange")
-        save(team2, "Yellow")
+        save(team1, team1_name)
+        save(team2, team2_name)
         conn.commit()
         return jsonify({"success": True})
     finally:
@@ -774,22 +801,36 @@ def get_locked_teams():
     date_str = request.args.get("date") or request.args.get("Date")
     if not date_str:
         return jsonify({"error": "No date provided"}), 400
+
     conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute(
-        """SELECT lt.team_name, p.id, p.id as player_id, p.name FROM locked_teams lt 
-                   JOIN players p ON lt.player_id = p.id WHERE lt.date = %s
-                   ORDER BY lt.team_name ASC, p.name ASC""",
-        (date_str,),
-    )
-    rows = cur.fetchall()
-    conn.close()
-    teams = {"Orange": [], "Yellow": []}
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """SELECT lt.team_name, lt.slot, p.id, p.id as player_id, p.name
+               FROM locked_teams lt
+               JOIN players p ON lt.player_id = p.id
+               WHERE lt.date = %s
+               ORDER BY lt.team_name ASC, lt.slot ASC""",
+            (date_str,),
+        )
+        rows = cur.fetchall()
+    finally:
+        conn.close()
+
+    # Build ordered list of teams, preserving slot order within each team
+    seen = {}       # team_name -> index in teams_list
+    teams_list = [] # [{"team_name": str, "players": [...]}, ...]
+
     for r in rows:
-        teams[r["team_name"]].append(
+        tname = r["team_name"]
+        if tname not in seen:
+            seen[tname] = len(teams_list)
+            teams_list.append({"team_name": tname, "players": []})
+        teams_list[seen[tname]]["players"].append(
             {"id": r["id"], "player_id": r["player_id"], "name": r["name"]}
         )
-    return jsonify({"success": True, "teams": teams, "Date": date_str})
+
+    return jsonify({"success": True, "teams": teams_list, "Date": date_str})
 
 
 @app.route("/results", methods=["GET", "POST"])
