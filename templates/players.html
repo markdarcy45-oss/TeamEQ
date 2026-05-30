@@ -4,6 +4,7 @@
         padding: 10px;
         background: var(--bg);
     }
+
     .panel {
         background: #fff;
         border: 1px solid var(--border);
@@ -12,12 +13,14 @@
         max-width: 800px;
         margin: 0 auto;
     }
+
     .section-title {
         margin-top: 0;
         font-size: 1.5rem;
         margin-bottom: 20px;
         color: #1e293b;
     }
+
     .controls-row {
         display: flex;
         gap: 10px;
@@ -26,13 +29,18 @@
         padding-bottom: 20px;
         border-bottom: 1px solid var(--border);
     }
-    .input-group { flex-grow: 1; }
+
+    .input-group {
+        flex-grow: 1;
+    }
+
     .input-group label {
         display: block;
         font-size: 0.85rem;
         font-weight: bold;
         margin-bottom: 5px;
     }
+
     .modern-input {
         width: 100%;
         padding: 8px 12px;
@@ -40,6 +48,7 @@
         border: 1px solid var(--border);
         font-size: 0.95rem;
     }
+
     .btn {
         padding: 9px 16px;
         border-radius: 6px;
@@ -48,9 +57,24 @@
         font-weight: bold;
         transition: 0.2s;
     }
-    .btn.primary { background: var(--primary); color: white; }
-    .btn.secondary { background: white; border: 1px solid var(--border); color: #475569; }
-    #playersList { list-style: none; padding: 0; margin-top: 20px; }
+
+    .btn.primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn.secondary {
+        background: white;
+        border: 1px solid var(--border);
+        color: #475569;
+    }
+
+    #playersList {
+        list-style: none;
+        padding: 0;
+        margin-top: 20px;
+    }
+
     .player-row {
         display: flex;
         align-items: center;
@@ -81,8 +105,7 @@
                     <strong>5.</strong> Visit <strong>Statistics</strong> for detailed league and player performance
                 </div>
             </div>
-            <span onclick="dismissWelcome()"
-                  style="margin-left:auto; cursor:pointer; color:#93c5fd;
+            <span onclick="dismissWelcome()" style="margin-left:auto; cursor:pointer; color:#93c5fd;
                          font-size:1.1rem; line-height:1; flex-shrink:0;">✕</span>
         </div>
 
@@ -96,12 +119,10 @@
             <div style="margin-top:15px; padding:10px; background:#f1f5f9;
                         border-radius:8px; display:inline-block">
                 <span style="font-weight:bold; color:#1e293b">League Invite Code: </span>
-                <span id="displayInviteCode"
-                      style="font-family:monospace; font-weight:bold; color:#2563eb; margin:0 10px">
+                <span id="displayInviteCode" style="font-family:monospace; font-weight:bold; color:#2563eb; margin:0 10px">
                     {{ invite_code }}
                 </span>
-                <button type="button" onclick="copyToClipboard(this)"
-                        style="background:none; border:none; color:#64748b; cursor:pointer;
+                <button type="button" onclick="copyToClipboard(this)" style="background:none; border:none; color:#64748b; cursor:pointer;
                                text-decoration:underline; font-size:0.8rem; padding:0;">
                     (Copy)
                 </button>
@@ -120,8 +141,7 @@
                 </select>
             </div>
             {% if current_user.is_admin %}
-            <input id="newGameName" class="modern-input" placeholder="New game name"
-                   style="display:none; width:200px" />
+            <input id="newGameName" class="modern-input" placeholder="New game name" style="display:none; width:200px" />
             <button id="btnNewGame" class="btn secondary">New Game</button>
             {% endif %}
             <button id="btnLoad" class="btn primary">Load Players</button>
@@ -135,8 +155,7 @@
                     <button id="addPlayerBtn" class="btn secondary" style="font-size:0.85rem">
                         Add Player
                     </button>
-                    <button id="savePlayersBtn" class="btn primary"
-                            style="font-size:0.85rem; background:#16a34a">
+                    <button id="savePlayersBtn" class="btn primary" style="font-size:0.85rem; background:#16a34a">
                         Save All
                     </button>
                 </div>
@@ -148,201 +167,236 @@
 </div>
 {% endblock %} {% block scripts %}
 <script>
-// ── Welcome banner ────────────────────────────────────────────────────────────
-// Strategy: ?welcome=1 in URL → set localStorage → show banner.
-// localStorage survives the JS-triggered reload. User clicks ✕ to clear it.
+    // ── Welcome banner ────────────────────────────────────────────────────────────
+    // Strategy: ?welcome=1 in URL → set localStorage → show banner.
+    // localStorage survives the JS-triggered reload. User clicks ✕ to clear it.
 
-function showWelcomeBanner() {
-    const banner = document.getElementById('welcomeBanner');
-    if (banner) banner.style.display = 'flex';
-}
+    function showWelcomeBanner() {
+        const banner = document.getElementById('welcomeBanner');
+        if (banner) banner.style.display = 'flex';
+    }
 
-function dismissWelcome() {
-    localStorage.removeItem('teameq_show_welcome');
-    const banner = document.getElementById('welcomeBanner');
-    if (banner) banner.style.display = 'none';
-}
+    function dismissWelcome() {
+        localStorage.removeItem('teameq_show_welcome');
+        const banner = document.getElementById('welcomeBanner');
+        if (banner) banner.style.display = 'none';
+    }
 
-// Check URL parameter first (set by Flask register redirect)
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('welcome') === '1') {
-    localStorage.setItem('teameq_show_welcome', '1');
-    // Clean the URL without triggering a reload
-    history.replaceState(null, '', window.location.pathname);
-}
+    // Check URL parameter first (set by Flask register redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('welcome') === '1') {
+        localStorage.setItem('teameq_show_welcome', '1');
+        // Clean the URL without triggering a reload
+        history.replaceState(null, '', window.location.pathname);
+    }
 
-// Now check localStorage (persists across the JS reload)
-if (localStorage.getItem('teameq_show_welcome') === '1') {
-    showWelcomeBanner();
-}
+    // Now check localStorage (persists across the JS reload)
+    if (localStorage.getItem('teameq_show_welcome') === '1') {
+        showWelcomeBanner();
+    }
 
-// ── Core page logic ───────────────────────────────────────────────────────────
-(async function () {
-    const msg             = document.getElementById('messages');
-    const gamesSel        = document.getElementById('gamesSel');
-    const playersList     = document.getElementById('playersList');
-    const isAdmin         = {{ 'true' if current_user.is_admin else 'false' }};
-    const currentActiveId = {{ active_game_id|tojson if active_game_id else 'null' }};
+    // ── Core page logic ───────────────────────────────────────────────────────────
+    (async function() {
+        const msg = document.getElementById('messages');
+        const gamesSel = document.getElementById('gamesSel');
+        const playersList = document.getElementById('playersList');
+        const isAdmin = {{ 'true' if current_user.is_admin else 'false' }};
+        const currentActiveId = {{ active_game_id|tojson if active_game_id else 'null' }};
 
-    if (!gamesSel || !playersList) return;
+        if (!gamesSel || !playersList) return;
 
-    // Game dropdown change → set active game + reload
-    gamesSel.onchange = () => {
-        const gid = gamesSel.value;
-        if (!gid) return;
-        fetch(`/api/set_active_game/${gid}`, { method: 'POST' })
-            .then(r => r.json())
-            .then(data => { if (data.ok) window.location.reload(); });
-    };
-
-    // Load Players button
-    const btnLoad = document.getElementById('btnLoad');
-    if (btnLoad) {
-        btnLoad.onclick = async () => {
+        // Game dropdown change → set active game + reload
+        gamesSel.onchange = () => {
             const gid = gamesSel.value;
-            if (!gid) { alert("Please select a game first."); return; }
-            try {
-                const response = await fetch(`/api/players/${gid}`);
-                const data     = await response.json();
-                playersList.innerHTML = '';
-                if (data.length === 0) {
-                    addEmptyRow();
-                } else {
-                    data.forEach(p => {
+            if (!gid) return;
+            fetch(`/api/set_active_game/${gid}`, {
+                    method: 'POST'
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.ok) window.location.reload();
+                });
+        };
+
+        // Load Players button
+        const btnLoad = document.getElementById('btnLoad');
+        if (btnLoad) {
+            btnLoad.onclick = async () => {
+                const gid = gamesSel.value;
+                if (!gid) {
+                    alert("Please select a game first.");
+                    return;
+                }
+                try {
+                    const response = await fetch(`/api/players/${gid}`);
+                    const data = await response.json();
+                    playersList.innerHTML = '';
+                    if (data.length === 0) {
                         const li = document.createElement('li');
                         li.className = 'player-row';
-                        li.innerHTML = `
-                            <span style="width:20px; color:#94a3b8; font-size:0.8rem;"></span>
-                            <input type="text" class="modern-input" value="${p.name}"
-                                   ${isAdmin ? '' : 'disabled'}>`;
+                        li.innerHTML = '<input type="text" class="modern-input" placeholder="New player name">';
                         playersList.appendChild(li);
-                    });
+                    } else {
+                        data.forEach((p, idx) => {
+                            const li = document.createElement('li');
+                            li.className = 'player-row';
+                            li.innerHTML =
+                                '<span style="width:20px;color:#94a3b8;font-size:0.8rem;">' + (idx+1) + '</span>' +
+                                '<input type="text" class="modern-input" value="' + p.name + '" ' + (isAdmin ? '' : 'disabled') + '>' +
+                                (isAdmin ? '<button type="button" onclick="this.closest(\x27li\x27).remove()" style="background:none;border:none;color:#cbd5e1;cursor:pointer;font-size:1.1rem;padding:4px 6px;flex-shrink:0;" onmouseover="this.style.color=\x27#ef4444\x27" onmouseout="this.style.color=\x27#cbd5e1\x27">&#x2715;</button>' : '');
+                            playersList.appendChild(li);
+                        });
+                    }
+                } catch (e) {
+                    console.error("Load failed:", e);
                 }
-            } catch (e) { console.error("Load failed:", e); }
-        };
-    }
+            };
+        }
 
-    function showInviteCode(code) {
-        if (msg) {
-            if (code && code !== 'null' && code !== '') {
-                msg.style.color = 'var(--primary)';
-                msg.textContent = `Invite Code: ${code}`;
-            } else {
-                msg.textContent = '';
+        function showInviteCode(code) {
+            if (msg) {
+                if (code && code !== 'null' && code !== '') {
+                    msg.style.color = 'var(--primary)';
+                    msg.textContent = `Invite Code: ${code}`;
+                } else {
+                    msg.textContent = '';
+                }
             }
         }
-    }
 
-    async function loadPlayers(gid) {
-        try {
-            const response = await fetch(`/api/players/${gid}`);
-            const players  = await response.json();
-            playersList.innerHTML = '';
-            players.forEach((p, idx) => {
-                const li = document.createElement('li');
-                li.className = 'player-row';
-                li.innerHTML = `
-                    <span style="width:20px; color:#94a3b8; font-size:0.8rem;">${idx + 1}</span>
-                    <input type="text" class="modern-input" value="${p.name}"
-                           ${isAdmin ? '' : 'disabled'}>`;
-                playersList.appendChild(li);
-            });
-        } catch (e) { console.error("Player load error:", e); }
-    }
-
-    async function loadGames() {
-        try {
-            const res   = await fetch('/api/games');
-            const games = await res.json();
-            const adminSection = document.getElementById('adminInviteSection');
-            const codeLabel    = document.getElementById('displayInviteCode');
-
-            gamesSel.innerHTML = '<option value="">-- select game --</option>';
-            games.forEach(game => {
-                const opt = document.createElement('option');
-                opt.value = game.id;
-                opt.textContent = game.name;
-                opt.setAttribute('data-code', game.invite_code || '');
-                gamesSel.appendChild(opt);
-            });
-
-            if (currentActiveId) {
-                gamesSel.value = currentActiveId;
-                loadPlayers(currentActiveId);
-                if (adminSection && codeLabel) {
-                    const sel  = gamesSel.options[gamesSel.selectedIndex];
-                    const code = sel.getAttribute('data-code');
-                    adminSection.style.display = code ? 'block' : 'none';
-                    if (code) codeLabel.textContent = code;
-                }
-            }
-        } catch (e) { console.error("Games load error:", e); }
-    }
-
-    loadGames();
-
-    const btnNewGame  = document.getElementById('btnNewGame');
-    const newGameName = document.getElementById('newGameName');
-    const btnAdd      = document.getElementById('addPlayerBtn');
-    const btnSave     = document.getElementById('savePlayersBtn');
-
-    if (btnNewGame && newGameName) {
-        btnNewGame.onclick = () => {
-            newGameName.style.display = newGameName.style.display === 'none' ? 'inline-block' : 'none';
-            if (newGameName.style.display !== 'none') {
-                newGameName.focus();
-                gamesSel.value = '';
-                showInviteCode('');
-            }
-        };
-    }
-
-    if (btnAdd) {
-        btnAdd.onclick = () => {
-            const li = document.createElement('li');
-            li.className = 'player-row';
-            li.innerHTML = `<span style="width:20px;"></span>
-                            <input type="text" class="modern-input" placeholder="New player name">`;
-            playersList.appendChild(li);
-        };
-    }
-
-    if (btnSave) {
-        btnSave.onclick = async () => {
-            const gid    = gamesSel.value;
-            const gname  = newGameName ? newGameName.value.trim() : '';
-            const pnames = Array.from(playersList.querySelectorAll('input'))
-                               .map(i => i.value.trim()).filter(v => v !== '');
-            if (!gid && !gname) return;
+        async function loadPlayers(gid) {
             try {
-                const response = await fetch('/api/players', {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({ game_id: gid || null, game_name: gname || null, players: pnames })
+                const response = await fetch(`/api/players/${gid}`);
+                const players = await response.json();
+                players.forEach((p, idx) => {
+                    const li = document.createElement('li');
+                    li.className = 'player-row';
+                    li.innerHTML =
+                        '<span style="width:20px;color:#94a3b8;font-size:0.8rem;">' + (idx+1) + '</span>' +
+                        '<input type="text" class="modern-input" value="' + p.name + '" ' + (isAdmin ? '' : 'disabled') + '>' +
+                        (isAdmin ? '<button type="button" onclick="this.closest(\x27li\x27).remove()" style="background:none;border:none;color:#cbd5e1;cursor:pointer;font-size:1.1rem;padding:4px 6px;flex-shrink:0;" onmouseover="this.style.color=\x27#ef4444\x27" onmouseout="this.style.color=\x27#cbd5e1\x27">&#x2715;</button>' : '');
+                    playersList.appendChild(li);
                 });
-                const data = await response.json();
-                if (data.invite_code) alert("SUCCESS! Invite Code: " + data.invite_code);
-                if (gname) {
-                    newGameName.value = '';
-                    newGameName.style.display = 'none';
-                    await loadGames();
-                } else {
-                    if (msg) { msg.style.color = '#16a34a'; msg.textContent = 'Saved!'; }
-                }
-            } catch (e) { if (msg) msg.textContent = 'Save failed.'; }
-        };
-    }
-})();
+            } catch (e) {
+                console.error("Player load error:", e);
+            }
+        }
 
-function copyToClipboard(btn) {
-    const code = document.getElementById('displayInviteCode').innerText.trim();
-    if (!code) return;
-    navigator.clipboard.writeText(code).then(() => {
-        const orig = btn.innerText;
-        btn.innerText   = "(Copied!)";
-        btn.style.color = "#16a34a";
-        setTimeout(() => { btn.innerText = orig; btn.style.color = "#64748b"; }, 2000);
-    });
-}
+        async function loadGames() {
+            try {
+                const res = await fetch('/api/games');
+                const games = await res.json();
+                const adminSection = document.getElementById('adminInviteSection');
+                const codeLabel = document.getElementById('displayInviteCode');
+
+                gamesSel.innerHTML = '<option value="">-- select game --</option>';
+                games.forEach(game => {
+                    const opt = document.createElement('option');
+                    opt.value = game.id;
+                    opt.textContent = game.name;
+                    opt.setAttribute('data-code', game.invite_code || '');
+                    gamesSel.appendChild(opt);
+                });
+
+                if (currentActiveId) {
+                    gamesSel.value = currentActiveId;
+                    loadPlayers(currentActiveId);
+                    if (adminSection && codeLabel) {
+                        const sel = gamesSel.options[gamesSel.selectedIndex];
+                        const code = sel.getAttribute('data-code');
+                        adminSection.style.display = code ? 'block' : 'none';
+                        if (code) codeLabel.textContent = code;
+                    }
+                }
+            } catch (e) {
+                console.error("Games load error:", e);
+            }
+        }
+
+        loadGames();
+
+        const btnNewGame = document.getElementById('btnNewGame');
+        const newGameName = document.getElementById('newGameName');
+        const btnAdd = document.getElementById('addPlayerBtn');
+        const btnSave = document.getElementById('savePlayersBtn');
+
+        if (btnNewGame && newGameName) {
+            btnNewGame.onclick = () => {
+                newGameName.style.display = newGameName.style.display === 'none' ? 'inline-block' : 'none';
+                if (newGameName.style.display !== 'none') {
+                    newGameName.focus();
+                    gamesSel.value = '';
+                    showInviteCode('');
+                    // Clear the roster — new game starts empty
+                    playersList.innerHTML = '<li style="padding: 12px 0; color: #94a3b8; font-style: italic; font-size: 0.9rem;">Add players for the new game below...</li>';
+                }
+            };
+        }
+
+        if (btnAdd) {
+            btnAdd.onclick = () => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span style="width:20px;"></span>
+                <input type="text" class="modern-input" placeholder="New player name">
+                <button type="button" onclick="this.closest('li').remove()"
+                    style="background:none; border:none; color:#cbd5e1; cursor:pointer;
+                           font-size:1.1rem; line-height:1; padding:4px 6px; flex-shrink:0;"
+                    onmouseover="this.style.color='#ef4444'"
+                    onmouseout="this.style.color='#cbd5e1'">✕</button>`;
+                playersList.appendChild(li);
+            };
+        }
+
+        if (btnSave) {
+            btnSave.onclick = async () => {
+                const gid = gamesSel.value;
+                const gname = newGameName ? newGameName.value.trim() : '';
+                const pnames = Array.from(playersList.querySelectorAll('input'))
+                    .map(i => i.value.trim()).filter(v => v !== '');
+                if (!gid && !gname) return;
+                try {
+                    const response = await fetch('/api/players', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            game_id: gid || null,
+                            game_name: gname || null,
+                            players: pnames
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.invite_code) alert("SUCCESS! Invite Code: " + data.invite_code);
+                    if (gname) {
+                        newGameName.value = '';
+                        newGameName.style.display = 'none';
+                        await loadGames();
+                    } else {
+                        if (msg) {
+                            msg.style.color = '#16a34a';
+                            msg.textContent = 'Saved!';
+                        }
+                    }
+                } catch (e) {
+                    if (msg) msg.textContent = 'Save failed.';
+                }
+            };
+        }
+    })();
+
+    function copyToClipboard(btn) {
+        const code = document.getElementById('displayInviteCode').innerText.trim();
+        if (!code) return;
+        navigator.clipboard.writeText(code).then(() => {
+            const orig = btn.innerText;
+            btn.innerText = "(Copied!)";
+            btn.style.color = "#16a34a";
+            setTimeout(() => {
+                btn.innerText = orig;
+                btn.style.color = "#64748b";
+            }, 2000);
+        });
+    }
 </script>
 {% endblock %}
