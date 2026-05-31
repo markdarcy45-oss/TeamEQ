@@ -164,6 +164,13 @@ def favicon():
 # 1. AUTHENTICATION ROUTES
 # =================================================================
 
+@app.before_request
+def redirect_https():
+    # Skip HTTPS redirect for assetlinks — Google's crawler won't follow redirects
+    if request.path == '/.well-known/assetlinks.json':
+        return None
+    # Your existing HTTPS redirect logic (if any) goes here
+
 @app.route('/.well-known/assetlinks.json')
 def serve_assetlinks():
     return jsonify([{
