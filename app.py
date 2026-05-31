@@ -172,7 +172,8 @@ def serve_assetlinks():
             "namespace": "android_app",
             "package_name": "com.onrender.teams_7g57.twa",
             "sha256_cert_fingerprints": [
-                "36:4A:8B:CF:C1:CF:E4:7F:CB:3A:7D:75:6B:58:87:33:2B:42:D8:59:AC:44:1F:19:84:98:00:B8:57:30:AD:B7"
+                "36:4A:8B:CF:C1:CF:E4:7F:CB:3A:7D:75:6B:58:87:33:2B:42:D8:59:AC:44:1F:19:84:98:00:B8:57:30:AD:B7",
+                "3B:1B:18:F1:F3:7C:73:0B:D8:4E:91:5D:40:C6:37:13:46:B7:C6:4E:D5:68:29:24:36:8C:63:4C:EB:90:27:48"
             ]
         }
     }])
