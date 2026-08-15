@@ -82,6 +82,128 @@
         border-bottom: 1px solid #f1f5f9;
         gap: 12px;
     }
+
+    /* ============================================================
+       MOBILE-FIRST RESPONSIVE — items 1, 2, 3
+       1. Stack panels vertically
+       2. Horizontal scroll on tables
+       3. Larger tap targets (min 44px)
+       ============================================================ */
+    @media (max-width: 768px) {
+
+        /* --- Item 1: Stack panels --- */
+        .dashboard-wrapper,
+        .panel-grid {
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .selection-panel {
+            width: 100% !important;
+        }
+
+        .page-container {
+            padding: 12px;
+        }
+
+        /* --- Item 2: Horizontal scroll on tables --- */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .dashboard-table,
+        .dashboard-table thead,
+        .dashboard-table tbody,
+        .dashboard-table th,
+        .dashboard-table td,
+        .dashboard-table tr {
+            white-space: nowrap;
+        }
+
+        /* --- Item 3: Tap targets --- */
+        .btn {
+            min-height: 44px;
+            padding: 10px 18px;
+            font-size: 1rem;
+        }
+
+        .modern-input,
+        select.modern-input {
+            min-height: 44px;
+            font-size: 1rem;
+            padding: 10px 12px;
+        }
+
+        .player-item {
+            min-height: 44px;
+            padding: 10px 12px;
+        }
+
+        .player-item label {
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+        }
+
+        .tab-btn {
+            min-height: 44px;
+            padding: 12px;
+            font-size: 1rem;
+        }
+
+        .btn-action {
+            min-height: 44px;
+            padding: 10px 16px;
+        }
+
+        .text-btn {
+            min-height: 44px;
+            padding: 10px 16px;
+        }
+
+        /* Teams page: stack team cards vertically */
+        .teams-display {
+            grid-template-columns: 1fr;
+        }
+
+        /* Teams page: full-width swap controls */
+        .swap-controls {
+            flex-wrap: wrap;
+        }
+
+        .swap-controls select {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        /* Points select in results table */
+        .points-select {
+            min-height: 44px;
+            font-size: 1rem;
+        }
+
+        /* Meta row on results page */
+        .meta-row {
+            flex-wrap: wrap;
+        }
+
+        .meta-row .btn {
+            flex: 1;
+        }
+
+        /* Form actions on results page */
+        .form-actions {
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* Player list height reduced on mobile to leave room for keyboard */
+        .player-list-container {
+            height: 220px;
+        }
+    }
+
 </style>
 
 <div class="page-container">
