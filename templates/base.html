@@ -63,84 +63,229 @@
 
 <body>
     {% if request.endpoint != 'login' and request.endpoint != 'register' %}
-    <header style="
-                background-color: #333;
-                color: white;
-                padding: 10px 20px;
+    <style>
+        .nav-bar {
+            background-color: #333;
+            color: white;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 52px;
+            position: relative;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.95rem;
+            padding: 16px 0;
+            display: block;
+        }
+
+        .nav-links a:hover { opacity: 0.8; }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-username {
+            font-size: 0.85rem;
+            color: #ccc;
+        }
+
+        .badge-admin {
+            background: #28a745;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .badge-readonly {
+            background: #007bff;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        /* Hamburger button — hidden on desktop */
+        .nav-hamburger {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .nav-hamburger span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: white;
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        /* Mobile drawer */
+        @media (max-width: 768px) {
+            .nav-bar { padding: 0 16px; }
+
+            .nav-hamburger { display: flex; }
+
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 52px;
+                left: 0;
+                right: 0;
+                background: #333;
+                flex-direction: column;
+                gap: 0;
+                z-index: 100;
+                padding: 8px 0;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            }
+
+            .nav-links.open { display: flex; }
+
+            .nav-links a {
+                padding: 14px 20px;
+                border-bottom: 1px solid #444;
+                font-size: 1rem;
+            }
+
+            .nav-right {
+                display: none;
+            }
+
+            /* User info moves into the drawer when open */
+            .nav-links.open .mobile-user-section {
                 display: flex;
-                justify-content: space-between;
-                align-items: center;
-            ">
-        <div style="display: flex; gap: 20px; align-items: center">
-            <a href="{{ url_for('group_page') }}" class="{{ 'active' if request.endpoint == 'group_page' }}" style="color: white; text-decoration: none; font-weight: bold">
-                Group
-            </a>
+                flex-direction: column;
+                gap: 10px;
+                padding: 14px 20px;
+                border-top: 1px solid #555;
+            }
 
-            <a href="{{ url_for('players_page_render') }}" class="{{ 'active' if request.endpoint == 'players_page_render' }}" style="color: white; text-decoration: none; font-weight: bold">
-                Players
-            </a>
+            .nav-hamburger.active span:nth-child(1) {
+                transform: translateY(7px) rotate(45deg);
+            }
+            .nav-hamburger.active span:nth-child(2) {
+                opacity: 0;
+            }
+            .nav-hamburger.active span:nth-child(3) {
+                transform: translateY(-7px) rotate(-45deg);
+            }
 
-            <a href="{{ url_for('teams_page') }}" class="{{ 'active' if request.endpoint == 'teams_page' }}" style="color: white; text-decoration: none; font-weight: bold">
-                Teams
-            </a>
+            .container {
+                padding: 12px;
+            }
+        }
 
-            <a href="{{ url_for('results_page') }}" class="{{ 'active' if request.endpoint == 'results_page' }}" style="color: white; text-decoration: none; font-weight: bold">
-                Results
-            </a>
-            <a href="{{ url_for('statistics_page') }}" class="{{ 'active' if request.endpoint == 'statistics_page' }}" style="color: white; text-decoration: none; font-weight: bold">
-                Statistics
-            </a>
-        </div>
+        @media (min-width: 769px) {
+            .mobile-user-section { display: none !important; }
+        }
+    </style>
 
-        <div style="display: flex; align-items: center; gap: 10px">
+    <header class="nav-bar">
+        <!-- Hamburger (mobile only) -->
+        <button class="nav-hamburger" id="navHamburger" aria-label="Menu"
+                onclick="toggleNav()">
+            <span></span><span></span><span></span>
+        </button>
+
+        <!-- Nav links -->
+        <nav class="nav-links" id="navLinks">
+            <a href="{{ url_for('group_page') }}"
+               class="{{ 'active' if request.endpoint == 'group_page' }}">Group</a>
+            <a href="{{ url_for('players_page_render') }}"
+               class="{{ 'active' if request.endpoint == 'players_page_render' }}">Players</a>
+            <a href="{{ url_for('teams_page') }}"
+               class="{{ 'active' if request.endpoint == 'teams_page' }}">Teams</a>
+            <a href="{{ url_for('results_page') }}"
+               class="{{ 'active' if request.endpoint == 'results_page' }}">Results</a>
+            <a href="{{ url_for('statistics_page') }}"
+               class="{{ 'active' if request.endpoint == 'statistics_page' }}">Statistics</a>
+
+            <!-- User info in drawer on mobile -->
             {% if current_user.is_authenticated %}
-            <span style="font-size: 0.9rem; color: #ccc">
-                Logged in as <strong>{{ current_user.username }}</strong> |
-                <a href="{{ url_for('delete_account_info') }}" style="color: #dc2626; text-decoration: none;">Delete Account</a> |
-            </span>
-
-            {% if current_user.is_admin %}
-            <span style="
-                        background-color: #28a745;
-                        color: white;
-                        padding: 2px 8px;
-                        border-radius: 4px;
-                        font-size: 0.75rem;
-                        font-weight: bold;
-                        letter-spacing: 0.4px;
-                    ">
-                Admin
-            </span>
-            {% else %}
-            <span style="
-                        background-color: #007bff;
-                        color: white;
-                        padding: 2px 8px;
-                        border-radius: 4px;
-                        font-size: 0.75rem;
-                        font-weight: bold;
-                        letter-spacing: 0.4px;
-                    ">
-                Read-only
-            </span>
+            <div class="mobile-user-section">
+                <span style="color:#ccc; font-size:0.9rem;">
+                    {{ current_user.username }}
+                    {% if current_user.is_admin %}
+                        <span class="badge-admin">Admin</span>
+                    {% else %}
+                        <span class="badge-readonly">Read-only</span>
+                    {% endif %}
+                </span>
+                <a href="{{ url_for('delete_account_info') }}"
+                   style="color:#f87171; font-size:0.85rem; text-decoration:none;">
+                    Delete Account
+                </a>
+                <a href="{{ url_for('logout') }}" class="btn-logout"
+                   style="text-align:center;">Logout</a>
+            </div>
             {% endif %}
+        </nav>
 
-            <a href="{{ url_for('logout') }}" style="
-                        background-color: #dc3545;
-                        color: white;
-                        padding: 2px 8px;
-                        border-radius: 4px;
-                        font-size: 0.75rem;
-                        font-weight: bold;
-                        letter-spacing: 0.4px;
-                        text-decoration: none;
-                        margin-left: 5px;
-                    ">
-                Logout
-            </a>
+        <!-- Right side (desktop only) -->
+        <div class="nav-right">
+            {% if current_user.is_authenticated %}
+            <span class="nav-username">
+                {{ current_user.username }} |
+                <a href="{{ url_for('delete_account_info') }}"
+                   style="color:#dc2626; text-decoration:none;">Delete Account</a>
+            </span>
+            {% if current_user.is_admin %}
+                <span class="badge-admin">Admin</span>
+            {% else %}
+                <span class="badge-readonly">Read-only</span>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
             {% endif %}
         </div>
     </header>
+
+    <script>
+        function toggleNav() {
+            const nav = document.getElementById('navLinks');
+            const btn = document.getElementById('navHamburger');
+            nav.classList.toggle('open');
+            btn.classList.toggle('active');
+        }
+        // Close drawer when a link is tapped
+        document.querySelectorAll('.nav-links a').forEach(a => {
+            a.addEventListener('click', () => {
+                document.getElementById('navLinks').classList.remove('open');
+                document.getElementById('navHamburger').classList.remove('active');
+            });
+        });
+    </script>
     {% endif %}
 
     <div class="container">{% block content %}{% endblock %}</div>
