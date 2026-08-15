@@ -338,131 +338,127 @@
     }
 
     /* ============================================================
-       MOBILE-FIRST RESPONSIVE — items 1, 2, 3
-       1. Stack panels vertically
-       2. Horizontal scroll on tables
-       3. Larger tap targets (min 44px)
+       MOBILE — Teams page keeps side-by-side layout,
+       just tightens sizing for small screens
        ============================================================ */
     @media (max-width: 768px) {
 
-        /* --- Item 1: Stack panels --- */
-        .dashboard-wrapper,
-        .panel-grid {
-            flex-direction: column !important;
-            gap: 16px;
-        }
-
-        .selection-panel {
-            width: 100% !important;
-            flex-shrink: 1 !important;
-        }
-
-        .teams-panel {
-            width: 100% !important;
-        }
-
         .page-container {
-            padding: 12px;
+            padding: 10px;
         }
 
-        /* --- Item 2: Horizontal scroll on tables --- */
-        .table-container {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
+        /* Keep side by side — tighten gap and allow scroll */
+        .panel-grid {
+            flex-direction: row !important;
+            gap: 10px;
+            align-items: flex-start;
         }
 
-        .dashboard-table,
-        .dashboard-table thead,
-        .dashboard-table tbody,
-        .dashboard-table th,
-        .dashboard-table td,
-        .dashboard-table tr {
-            white-space: nowrap;
+        /* Availability panel: narrower fixed width */
+        .selection-panel {
+            width: 170px !important;
+            flex-shrink: 0 !important;
+            padding: 12px !important;
         }
 
-        /* --- Item 3: Tap targets --- */
-        .btn {
-            min-height: 44px;
-            padding: 10px 18px;
-            font-size: 1rem;
+        /* Matchup panel: takes remaining space */
+        .teams-panel {
+            flex: 1 !important;
+            min-width: 0;
+            padding: 12px !important;
         }
 
-        .modern-input,
-        select.modern-input {
-            min-height: 44px;
-            font-size: 1rem;
-            padding: 10px 12px;
+        /* Tighten internal spacing */
+        .input-group {
+            margin-bottom: 10px;
+        }
+
+        .input-group label,
+        .section-title {
+            font-size: 0.85rem;
+        }
+
+        .selection-header {
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        /* Smaller player list height on mobile */
+        .player-list-container {
+            height: 200px;
         }
 
         .player-item {
-            min-height: 44px;
-            padding: 10px 12px;
+            padding: 6px 8px;
+            font-size: 0.85rem;
         }
 
-        .player-item label {
-            min-height: 44px;
-            display: flex;
-            align-items: center;
+        .rank-pill {
+            font-size: 0.65rem;
+            padding: 1px 4px;
         }
 
-        .tab-btn {
-            min-height: 44px;
-            padding: 12px;
-            font-size: 1rem;
-        }
-
-        .btn-action {
-            min-height: 44px;
-            padding: 10px 16px;
-        }
-
-        .text-btn {
-            min-height: 44px;
-            padding: 10px 16px;
-        }
-
-        /* Teams page: stack team cards vertically */
+        /* Team cards stack vertically within matchup panel */
         .teams-display {
             grid-template-columns: 1fr;
+            gap: 10px;
         }
 
-        /* Teams page: full-width swap controls */
+        .team-name-input {
+            font-size: 0.95rem;
+        }
+
+        .team-roster li {
+            padding: 6px 8px;
+            font-size: 0.85rem;
+        }
+
+        /* Swap controls wrap on small screens */
         .swap-controls {
             flex-wrap: wrap;
+            gap: 6px;
         }
 
         .swap-controls select {
             flex: 1;
-            min-width: 120px;
+            min-width: 80px;
+            font-size: 0.85rem;
         }
 
-        /* Points select in results table */
-        .points-select {
-            min-height: 44px;
-            font-size: 1rem;
+        /* Buttons */
+        .btn {
+            padding: 8px 10px;
+            font-size: 0.85rem;
         }
 
-        /* Meta row on results page */
-        .meta-row {
-            flex-wrap: wrap;
+        .full-width {
+            margin-top: 10px;
         }
 
-        .meta-row .btn {
-            flex: 1;
+        .text-btn {
+            padding: 4px 8px;
+            font-size: 0.75rem;
         }
 
-        /* Form actions on results page */
-        .form-actions {
-            flex-wrap: wrap;
-            gap: 10px;
+        .modern-input {
+            font-size: 0.85rem;
+            padding: 6px;
         }
 
-        /* Player list height reduced on mobile to leave room for keyboard */
-        .player-list-container {
-            height: 220px;
+        .balance-bar {
+            font-size: 0.8rem;
+            padding: 8px;
+        }
+
+        .control-card {
+            padding: 10px;
+            margin-top: 12px;
+        }
+
+        .control-card h3 {
+            font-size: 0.7rem;
         }
     }
-
 </style>
 
 <script>
