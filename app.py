@@ -981,10 +981,13 @@ def statistics_page():
         # 2. ACTIVE PLAYERS
         cur.execute(
             """
-            SELECT COUNT(DISTINCT player_id) as active 
-            FROM results 
-            WHERE game_id = %s AND points IS NOT NULL
-        """,
+            SELECT COUNT(DISTINCT r.player_id) as active
+            FROM results r
+            JOIN players p ON r.player_id = p.id
+            WHERE r.game_id = %s 
+            AND r.points IS NOT NULL
+            AND p.active = 1
+            """,
             (game_id,),
         )
         row = cur.fetchone()
