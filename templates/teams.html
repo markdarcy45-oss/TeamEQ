@@ -79,6 +79,11 @@
                 <div id="lockMsg" class="lock-feedback"></div>
             </div>
             {% endif %}
+
+            <div class="control-card share-card">
+                <h3>Share</h3>
+                <button onclick="window.print()" class="btn secondary full-width">📋 Share Teams</button>
+            </div>
         </div>
     </div>
 </div>
@@ -459,6 +464,84 @@
             font-size: 0.7rem;
         }
     }
+
+    /* ============================================================
+       PRINT / SHARE — hides ranks, controls, and nav
+       ============================================================ */
+    @media print {
+        /* Hide everything except the matchup */
+        .selection-panel,
+        .balance-bar,
+        .swap-card,
+        .admin-card,
+        .share-card,
+        header, nav, footer {
+            display: none !important;
+        }
+
+        .page-container {
+            padding: 0;
+            background: white;
+        }
+
+        /* Compact panel — fit to content width */
+        .panel-grid {
+            display: block;
+        }
+        .teams-panel {
+            width: auto;
+            display: inline-block;
+            box-shadow: none;
+            border: none;
+            padding: 0;
+        }
+
+        /* Force side-by-side columns, sized to content */
+        .teams-display {
+            display: grid !important;
+            grid-template-columns: auto auto !important;
+            gap: 20px !important;
+        }
+
+        /* Hide individual rank numbers next to player names */
+        .team-roster li strong {
+            display: none !important;
+        }
+
+        /* Hide team rank totals in header */
+        .total-pill {
+            display: none !important;
+        }
+
+        /* Tighten up team card appearance */
+        .team-card {
+            border: 1px solid #ccc;
+            min-width: 120px;
+        }
+
+        /* Remove reserved empty space */
+        .team-roster {
+            min-height: 0 !important;
+        }
+
+        /* Remove card bottom padding so it hugs last player */
+        .team-card {
+            padding-bottom: 0 !important;
+        }
+
+        .team-roster li {
+            padding: 4px 10px;
+            font-size: 0.9rem;
+        }
+
+        .team-header {
+            padding: 6px 10px;
+        }
+
+        .team-name-input {
+            font-size: 1rem;
+        }
+    }
 </style>
 
 <script>
@@ -511,13 +594,9 @@
                     window.currentTeam1 = t1;
                     window.currentTeam2 = t2;
 
-                    // Sort by Rank Ascending (Low-to-High), then Name A-Z
+                    // Sort by Rank Ascending, then A-Z on ties
                     const sortByRankAndName = (a, b) => {
-                        // If ranks are different, sort by Rank (1, 2, 3...)
-                        if (a.rank !== b.rank) {
-                            return a.rank - b.rank;
-                        }
-                        // If ranks are identical, sort by Name (A-Z)
+                        if (a.rank !== b.rank) return a.rank - b.rank;
                         return (a.player || "").localeCompare(b.player || "");
                     };
 
@@ -670,6 +749,43 @@
                             player2: p2
                         }),
                     });
+                };
+
+                // Re-sort A-Z for print, restore rank order after
+                function resortListAlpha(ulId) {
+                    const ul = document.getElementById(ulId);
+                    if (!ul) return;
+                    const items = Array.from(ul.querySelectorAll("li"));
+                    items.sort((a, b) => {
+                        const nameA = a.querySelector("span") ? a.querySelector("span").textContent : a.textContent;
+                        const nameB = b.querySelector("span") ? b.querySelector("span").textContent : b.textContent;
+                        return nameA.localeCompare(nameB);
+                    });
+                    items.forEach(li => ul.appendChild(li));
+                }
+
+                function resortListRank(ulId, teamArr) {
+                    const ul = document.getElementById(ulId);
+                    if (!ul || !teamArr.length) return;
+                    const items = Array.from(ul.querySelectorAll("li"));
+                    items.sort((a, b) => {
+                        const nameA = a.querySelector("span") ? a.querySelector("span").textContent : "";
+                        const nameB = b.querySelector("span") ? b.querySelector("span").textContent : "";
+                        const pA = teamArr.find(p => p.player === nameA) || { rank: 999 };
+                        const pB = teamArr.find(p => p.player === nameB) || { rank: 999 };
+                        if (pA.rank !== pB.rank) return pA.rank - pB.rank;
+                        return nameA.localeCompare(nameB);
+                    });
+                    items.forEach(li => ul.appendChild(li));
+                }
+
+                window.onbeforeprint = () => {
+                    resortListAlpha("team1List");
+                    resortListAlpha("team2List");
+                };
+                window.onafterprint = () => {
+                    resortListRank("team1List", window.currentTeam1);
+                    resortListRank("team2List", window.currentTeam2);
                 };
 
                 // Initialize
