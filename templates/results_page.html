@@ -290,6 +290,16 @@
                 {% endif %}
             </div>
 
+            <div id="resultBtns" style="display:none; margin-bottom:14px;">
+                <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase;
+                            letter-spacing:0.05em; margin-bottom:8px;">Result</div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button id="btnWin1" class="btn secondary">— Win</button>
+                    <button id="btnDraw"  class="btn secondary">Draw</button>
+                    <button id="btnWin2" class="btn secondary">— Win</button>
+                </div>
+            </div>
+
             <div class="table-container">
                 <table class="dashboard-table">
                     <thead>
@@ -436,6 +446,13 @@
         const resultsBody = document.getElementById("resultsBody");
         const submitBtn = document.getElementById("submitResultsBtn");
         const statusText = document.getElementById("pointsStatus");
+        const resultBtns = document.getElementById("resultBtns");
+        const btnWin1 = document.getElementById("btnWin1");
+        const btnDraw = document.getElementById("btnDraw");
+        const btnWin2 = document.getElementById("btnWin2");
+
+        // Track which rows belong to which team (set during renderInputRows)
+        let teamRowMap = {}; // { teamIndex: [tr, tr, ...] }
 
         dateInput.value = new Date().toISOString().split("T")[0];
 
@@ -460,17 +477,19 @@
 
         function renderInputRows(teams) {
             resultsBody.innerHTML = "";
+            teamRowMap = {};
             let i = 1;
-            // Two neutral colours: one per team slot regardless of name
             const teamColors = ["#3b82f6", "#64748b"];
 
             teams.forEach((team, idx) => {
                 const teamName = team.team_name || `Team ${idx + 1}`;
                 const color = teamColors[idx] || "#475569";
+                teamRowMap[idx] = [];
 
                 team.players.forEach((p) => {
                     const tr = document.createElement("tr");
                     tr.dataset.playerId = p.player_id || p.id;
+                    tr.dataset.teamIdx = idx;
                     const name = p.name || p.Player || p.player || "Unknown";
                     tr.innerHTML = `
                 <td>${i++}</td>
@@ -484,12 +503,39 @@
                     </select>
                 </td>`;
                     resultsBody.appendChild(tr);
+                    teamRowMap[idx].push(tr);
                 });
             });
+
+            // Label and show result buttons using actual team names
+            const name0 = teams[0] ? (teams[0].team_name || "Team 1") : "Team 1";
+            const name1 = teams[1] ? (teams[1].team_name || "Team 2") : "Team 2";
+            btnWin1.textContent = `${name0} Win`;
+            btnWin2.textContent = `${name1} Win`;
+            resultBtns.style.display = "block";
 
             resultsBody.querySelectorAll(".points-select").forEach((s) => (s.onchange = validate));
             validate();
         }
+
+        function setPoints(win) {
+            // win = 0 (team 0 wins), 1 (team 1 wins), or "draw"
+            Array.from(resultsBody.querySelectorAll("tr")).forEach((tr) => {
+                const sel = tr.querySelector(".points-select");
+                if (!sel) return;
+                const idx = parseInt(tr.dataset.teamIdx);
+                if (win === "draw") {
+                    sel.value = "1";
+                } else {
+                    sel.value = idx === win ? "3" : "0";
+                }
+            });
+            validate();
+        }
+
+        btnWin1.onclick = () => setPoints(0);
+        btnDraw.onclick  = () => setPoints("draw");
+        btnWin2.onclick = () => setPoints(1);
 
         function validate() {
             const selects = Array.from(resultsBody.querySelectorAll(".points-select"));
