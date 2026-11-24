@@ -67,6 +67,18 @@
         border: 1px solid var(--border);
     }
 
+    .points-display {
+        display: inline-block;
+        min-width: 36px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        background: #f1f5f9;
+        color: #1e293b;
+        font-weight: 700;
+        font-size: 0.95rem;
+        text-align: center;
+    }
+
     .meta-row {
         display: flex;
         gap: 12px;
@@ -246,9 +258,11 @@
             min-width: 120px;
         }
 
-        /* Points select in results table */
-        .points-select {
+        /* Points display in results table */
+        .points-display {
             min-height: 44px;
+            line-height: 44px;
+            padding: 0 12px;
             font-size: 1rem;
         }
 
@@ -495,13 +509,7 @@
                 <td>${i++}</td>
                 <td style="font-weight:bold; color:${color}">${teamName}</td>
                 <td class="player-name">${name}</td>
-                <td>
-                    <select class="modern-input points-select" style="padding:4px;">
-                        <option value="0">0</option>
-                        <option value="1">1</option>
-                        <option value="3">3</option>
-                    </select>
-                </td>`;
+                <td><span class="points-display">0</span></td>`;
                     resultsBody.appendChild(tr);
                     teamRowMap[idx].push(tr);
                 });
@@ -514,20 +522,19 @@
             btnWin2.textContent = `${name1} Win`;
             resultBtns.style.display = "block";
 
-            resultsBody.querySelectorAll(".points-select").forEach((s) => (s.onchange = validate));
             validate();
         }
 
         function setPoints(win) {
             // win = 0 (team 0 wins), 1 (team 1 wins), or "draw"
             Array.from(resultsBody.querySelectorAll("tr")).forEach((tr) => {
-                const sel = tr.querySelector(".points-select");
-                if (!sel) return;
+                const disp = tr.querySelector(".points-display");
+                if (!disp) return;
                 const idx = parseInt(tr.dataset.teamIdx);
                 if (win === "draw") {
-                    sel.value = "1";
+                    disp.textContent = "1";
                 } else {
-                    sel.value = idx === win ? "3" : "0";
+                    disp.textContent = idx === win ? "3" : "0";
                 }
             });
             validate();
@@ -538,8 +545,8 @@
         btnWin2.onclick = () => setPoints(1);
 
         function validate() {
-            const selects = Array.from(resultsBody.querySelectorAll(".points-select"));
-            const total = selects.reduce((sum, s) => sum + parseInt(s.value), 0);
+            const selects = Array.from(resultsBody.querySelectorAll(".points-display"));
+            const total = selects.reduce((sum, s) => sum + parseInt(s.textContent || "0"), 0);
             const count = selects.length;
             const allowed = count === 12 ? [12, 18] : count === 10 ? [10, 15] : [count];
             const isOk = allowed.includes(total);
@@ -554,7 +561,7 @@
                 Date: dateInput.value,
                 results: Array.from(resultsBody.querySelectorAll("tr")).map((tr) => ({
                     player_id: parseInt(tr.dataset.playerId),
-                    points: parseInt(tr.querySelector(".points-select").value),
+                    points: parseInt(tr.querySelector(".points-display").textContent || "0"),
                 })),
             };
             const resp = await fetch("/results", {
