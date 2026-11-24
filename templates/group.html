@@ -21,7 +21,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for m in members %}
+                    {# Owner first, then other Admins A-Z, then Read-only A-Z #}
+                    {% set owner = members | selectattr('username', 'equalto', current_user.username) | list %}
+                    {% set other_admins = members | rejectattr('username', 'equalto', current_user.username) | selectattr('role', 'equalto', 'Admin') | sort(attribute='username') | list %}
+                    {% set readonly = members | selectattr('role', 'equalto', 'Read-only') | sort(attribute='username') | list %}
+                    {% for m in owner + other_admins + readonly %}
                     <tr style="border-bottom: 1px solid var(--border)">
                         <td style="padding: 12px; font-weight: 500">
                             {{ m.username }} {% if m.username == current_user.username %}
