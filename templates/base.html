@@ -229,6 +229,8 @@
                class="{{ 'active' if request.endpoint == 'teams_page' }}">Teams</a>
             <a href="{{ url_for('results_page') }}"
                class="{{ 'active' if request.endpoint == 'results_page' }}">Results</a>
+            <a href="{{ url_for('history_page') }}"
+               class="{{ 'active' if request.endpoint == 'history_page' }}">History</a>
             <a href="{{ url_for('statistics_page') }}"
                class="{{ 'active' if request.endpoint == 'statistics_page' }}">Statistics</a>
 
