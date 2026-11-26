@@ -1,0 +1,431 @@
+{% extends "base.html" %}
+{% block title %}History{% endblock %}
+{% block content %}
+
+{#
+  Route: /history  →  def history_page()
+  Expected context variables:
+  ─────────────────────────────────────────────────────────────────
+  stats = {
+      "total_games":        int,   # e.g. 24
+      "count_6v6":          int,   # 12-player games
+      "count_5v5":          int,   # 10-player games
+      "total_appearances":  int,   # sum of all non-null results rows
+      "span_label":         str,   # e.g. "14 months"
+  }
+
+  insights = {
+      "longest_gap_label":  str,   # e.g. "8 weeks"
+      "longest_gap_desc":   str,   # e.g. "May → Jul 2026 — summer"
+      "busiest_label":      str,   # e.g. "Jan & Feb '26"
+      "busiest_desc":       str,   # e.g. "3 games each"
+      "first_game_date":    str,   # e.g. "23 Sep 2025"
+      "history_span":       str,   # e.g. "1 year, 2 months of history"
+      "date_range":         str,   # e.g. "Sep '25 — Oct '26"
+  }
+
+  monthly_data = [                 # all months in range, ordered asc
+      {"label": "Sep '25", "count": 2},
+      ...
+  ]
+
+  games = [                        # ordered most-recent first
+      {
+          "num":      int,         # game number, descending (24, 23, …)
+          "date":     str,         # e.g. "27 Oct '26"
+          "players":  int,         # participant count
+          "format":   str,         # "6v6" | "5v5" | "irregular"
+          "gap_note": str | None,  # e.g. "8-week summer break", else None
+      },
+      ...
+  ]
+  ─────────────────────────────────────────────────────────────────
+#}
+
+<style>
+    /* ================================================================
+       History page — stat grid + insight chips + bar chart + game log
+       ================================================================ */
+
+    /* Shared panel shell */
+    .panel {
+        background: #fff;
+        padding: 24px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+    }
+
+    .section-title {
+        margin: 0 0 20px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 12px;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .section-title .stl-sub {
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: var(--text-muted);
+    }
+
+    /* ---- Stat tiles ---- */
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .stat-tile {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .stat-tile .st-lbl {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+    }
+
+    .stat-tile .st-val {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1.1;
+        color: #1e293b;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .stat-tile.primary .st-val { color: var(--primary); }
+
+    .stat-tile .st-sub {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    /* ---- Insight chips ---- */
+    .insight-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .insight-chip {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .insight-chip.warning {
+        background: #fff7ed;
+        border-color: #fed7aa;
+    }
+
+    .insight-chip .ic-lbl {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: var(--text-muted);
+        margin-bottom: 2px;
+    }
+
+    .insight-chip.warning .ic-lbl { color: #9a3412; }
+
+    .insight-chip .ic-val {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .insight-chip.warning .ic-val { color: #c2410c; }
+
+    .insight-chip .ic-sub {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-top: 1px;
+    }
+
+    .insight-chip.warning .ic-sub { color: #c2410c; opacity: 0.75; }
+
+    /* ---- Bar chart ---- */
+    .bar-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .bar-chart {
+        display: flex;
+        align-items: flex-end;
+        gap: 5px;
+        min-width: 500px;
+        height: 100px;
+        padding-bottom: 2px;
+    }
+
+    .bc {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        gap: 2px;
+    }
+
+    .bc-count {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        height: 14px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .bc-wrap {
+        width: 100%;
+        background: #e2e8f0;
+        border-radius: 3px 3px 0 0;
+        height: 60px;
+        display: flex;
+        align-items: flex-end;
+        overflow: hidden;
+    }
+
+    .bc-bar {
+        width: 100%;
+        background: var(--primary);
+        border-radius: 3px 3px 0 0;
+    }
+
+    .bc.peak .bc-bar { background: #1d4ed8; }
+    .bc.empty .bc-wrap { background: #f1f5f9; }
+    .bc.empty .bc-bar  { background: transparent; }
+
+    .bc-label {
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+        margin-top: 4px;
+    }
+
+    /* ---- Game log table ---- */
+    .history-table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 0.9rem;
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 10px 12px;
+        text-align: left;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .history-table th {
+        background: #f8fafc;
+        color: var(--text-muted);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+    }
+
+    .history-table tbody tr:hover { background: #f8fafc; }
+    .history-table tbody tr:last-child td { border-bottom: none; }
+
+    .ht-num     { color: var(--text-muted); font-size: 0.82rem; font-variant-numeric: tabular-nums; width: 36px; }
+    .ht-date    { font-weight: 500; }
+    .ht-players { color: var(--text-muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+
+    .h-badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 2px 10px;
+        border-radius: 20px;
+        letter-spacing: 0.03em;
+    }
+
+    .h-badge.b6v6 { background: #dbeafe; color: #1d4ed8; }
+    .h-badge.b5v5 { background: #f1f5f9; color: #475569; }
+    .h-badge.birr { background: #fef3c7; color: #92400e; }
+
+    .history-table tr.gap-row td {
+        background: #fafaf9;
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        font-style: italic;
+        padding: 5px 12px;
+    }
+
+    .stat-footnote {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin: -8px 0 16px;
+        padding-left: 2px;
+    }
+
+    /* ---- Mobile ---- */
+    @media (max-width: 768px) {
+        .stat-grid    { grid-template-columns: 1fr 1fr; }
+        .insight-grid { grid-template-columns: 1fr; }
+
+        .tbl-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .history-table th,
+        .history-table td {
+            white-space: nowrap;
+        }
+    }
+</style>
+
+<!-- Stat tiles -->
+<div class="stat-grid">
+    <div class="stat-tile primary">
+        <div class="st-lbl">Total Games</div>
+        <div class="st-val">{{ stats.total_games }}</div>
+        <div class="st-sub">{{ stats.span_label }}</div>
+    </div>
+    <div class="stat-tile">
+        <div class="st-lbl">6v6</div>
+        <div class="st-val">{{ stats.count_6v6 }}</div>
+        <div class="st-sub">12 players</div>
+    </div>
+    <div class="stat-tile">
+        <div class="st-lbl">5v5</div>
+        <div class="st-val">{{ stats.count_5v5 }}</div>
+        <div class="st-sub">10 players</div>
+    </div>
+    <div class="stat-tile">
+        <div class="st-lbl">Appearances</div>
+        <div class="st-val">{{ stats.total_appearances }}</div>
+        <div class="st-sub">Player total</div>
+    </div>
+</div>
+
+{% if stats.count_irregular %}
+<p class="stat-footnote">* Includes {{ stats.count_irregular }} irregular game{{ 's' if stats.count_irregular != 1 else '' }} (non-standard player count)</p>
+{% endif %}
+
+<!-- Insight chips -->
+<div class="insight-grid">
+    <div class="insight-chip warning">
+        <div class="ic-lbl">Longest Gap</div>
+        <div class="ic-val">{{ insights.longest_gap_label }}</div>
+        <div class="ic-sub">{{ insights.longest_gap_desc }}</div>
+    </div>
+    <div class="insight-chip">
+        <div class="ic-lbl">Busiest Month</div>
+        <div class="ic-val">{{ insights.busiest_label }}</div>
+        <div class="ic-sub">{{ insights.busiest_desc }}</div>
+    </div>
+    <div class="insight-chip">
+        <div class="ic-lbl">First Game</div>
+        <div class="ic-val">{{ insights.first_game_date }}</div>
+        <div class="ic-sub">{{ insights.history_span }}</div>
+    </div>
+</div>
+
+<!-- Bar chart -->
+<div class="panel">
+    <h2 class="section-title">
+        Games per Month
+        <span class="stl-sub">{{ insights.date_range }}</span>
+    </h2>
+    <div class="bar-scroll">
+        <div class="bar-chart" id="barChart"></div>
+    </div>
+</div>
+
+<!-- Game log -->
+<div class="panel">
+    <h2 class="section-title">
+        Game Log
+        <span class="stl-sub">Most recent first</span>
+    </h2>
+    <div class="tbl-wrap">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Format</th>
+                    <th>Players</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if games %}
+                    {% for game in games %}
+                        {% if game.gap_note %}
+                        <tr class="gap-row">
+                            <td colspan="4">— {{ game.gap_note }} —</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td class="ht-num">{{ game.num }}</td>
+                            <td class="ht-date">{{ game.date }}</td>
+                            <td>
+                                {% if game.format == '6v6' %}
+                                    <span class="h-badge b6v6">6v6</span>
+                                {% elif game.format == '5v5' %}
+                                    <span class="h-badge b5v5">5v5</span>
+                                {% else %}
+                                    <span class="h-badge birr">Irregular</span>
+                                {% endif %}
+                            </td>
+                            <td class="ht-players">{{ game.players }} players</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align:center; color:var(--text-muted);
+                                               padding:40px; font-style:italic;">
+                            No game history found.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const data = {{ monthly_data | tojson | safe }};
+        const maxCount = Math.max(...data.map(m => m.count), 1);
+        const chart = document.getElementById("barChart");
+
+        data.forEach(function (m) {
+            var pct = m.count === 0 ? 0 : Math.round((m.count / maxCount) * 100);
+            var cls = "bc";
+            if (m.count === 0)         cls += " empty";
+            else if (m.count === maxCount) cls += " peak";
+
+            var col = document.createElement("div");
+            col.className = cls;
+            col.innerHTML =
+                '<div class="bc-count">' + (m.count > 0 ? m.count : "") + "</div>" +
+                '<div class="bc-wrap"><div class="bc-bar" style="height:' + pct + '%"></div></div>' +
+                '<div class="bc-label">' + m.label + "</div>";
+            chart.appendChild(col);
+        });
+    })();
+</script>
+
+{% endblock %}
