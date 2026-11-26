@@ -61,7 +61,7 @@ if not app.secret_key:
 app.config.update(
     SESSION_COOKIE_NAME="teams_auth_v2",
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=False,  # Set to True if using HTTPS
+    SESSION_COOKIE_SECURE=True,  # Set to True if using HTTPS
     SESSION_COOKIE_HTTPONLY=True,
     PERMANENT_SESSION_LIFETIME=1800,
 )
@@ -128,7 +128,7 @@ def load_user(user_id):
 def require_login():
     # List of endpoints that don't require logging in
     # ADD 'register' TO THIS LIST
-    allowed_routes = ["login", "register", "static", "serve_manifest", "serve_assetlinks", "health"]
+    allowed_routes = ["login", "register", "static", "serve_manifest", "serve_assetlinks", "health", "privacy_policy", "delete_account_info"]
 
     if not current_user.is_authenticated and request.endpoint not in allowed_routes:
         return redirect(url_for("login"))
@@ -934,11 +934,230 @@ def results_page():
     conn.close()
 
     return render_template("results_page.html", standings=rows)
+    
+@app.route('/history')
+@login_required
+def history_page():
+    game_id = session.get("active_game_id")
+    if not game_id:
+        return redirect(url_for("players_page_render"))
+
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor()
+        # One row per distinct game: date + how many players had results recorded
+        cur.execute("""
+            SELECT match_date, COUNT(*) AS player_count
+            FROM results
+            WHERE game_id = %s AND points IS NOT NULL
+            GROUP BY match_date
+            ORDER BY match_date ASC
+        """, (game_id,))
+        raw_games = cur.fetchall()
+    finally:
+        conn.close()
+
+    # ------------------------------------------------------------------ #
+    # Empty state — no games recorded yet
+    # ------------------------------------------------------------------ #
+    if not raw_games:
+        return render_template('history.html',
+            stats={
+                "total_games": 0,
+                "count_6v6": 0,
+                "count_5v5": 0,
+                "count_irregular": 0,
+                "total_appearances": 0,
+                "span_label": "—",
+            },
+            insights={
+                "longest_gap_label": "—",
+                "longest_gap_desc": "No games yet",
+                "busiest_label": "—",
+                "busiest_desc": "—",
+                "first_game_date": "—",
+                "history_span": "No games yet",
+                "date_range": "—",
+            },
+            monthly_data=[],
+            games=[]
+        )
+
+    # ------------------------------------------------------------------ #
+    # Parse dates  (match_date stored as text "YYYY-MM-DD")
+    # ------------------------------------------------------------------ #
+    game_dates = []
+    for row in raw_games:
+        try:
+            d = datetime.strptime(row["match_date"], "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            continue
+        game_dates.append({"date": d, "player_count": row["player_count"]})
+
+    game_dates.sort(key=lambda x: x["date"])
+
+    if not game_dates:
+        return redirect(url_for("history_page"))   # malformed dates — safe fallback
+
+    # ------------------------------------------------------------------ #
+    # Stats
+    # ------------------------------------------------------------------ #
+    total_games       = len(game_dates)
+    count_6v6         = sum(1 for g in game_dates if g["player_count"] == 12)
+    count_5v5         = sum(1 for g in game_dates if g["player_count"] == 10)
+    total_appearances = sum(g["player_count"] for g in game_dates)
+
+    first_date = game_dates[0]["date"]
+    last_date  = game_dates[-1]["date"]
+
+    # Span in months (rounded to nearest month)
+    months_diff = (last_date.year - first_date.year) * 12 + (last_date.month - first_date.month)
+    if months_diff == 0:
+        span_label = "1 month"
+    elif months_diff < 12:
+        span_label = f"{months_diff} months"
+    else:
+        y = months_diff // 12
+        m = months_diff % 12
+        span_label = f"{y} year{'s' if y > 1 else ''}"
+        if m:
+            span_label += f", {m} month{'s' if m > 1 else ''}"
+
+    # ------------------------------------------------------------------ #
+    # Monthly data  (all months in range, zeros included)
+    # ------------------------------------------------------------------ #
+    month_counts = {}
+    for g in game_dates:
+        key = (g["date"].year, g["date"].month)
+        month_counts[key] = month_counts.get(key, 0) + 1
+
+    monthly_data = []
+    cy, cm = first_date.year, first_date.month
+    ey, em = last_date.year, last_date.month
+    while (cy, cm) <= (ey, em):
+        monthly_data.append({
+            "label": datetime(cy, cm, 1).strftime("%b '%y"),
+            "count": month_counts.get((cy, cm), 0),
+        })
+        cm += 1
+        if cm > 12:
+            cm = 1
+            cy += 1
+
+    # ------------------------------------------------------------------ #
+    # Gap detection  (threshold: >= 42 days / 6 weeks)
+    # ------------------------------------------------------------------ #
+    GAP_DAYS = 42
+    gaps = {}   # index i  →  gap info (gap falls between game i-1 and game i)
+    for i in range(1, len(game_dates)):
+        delta = (game_dates[i]["date"] - game_dates[i - 1]["date"]).days
+        if delta >= GAP_DAYS:
+            weeks = round(delta / 7)
+            gaps[i - 1] = {
+                "weeks":    weeks,
+                "from_dt":  game_dates[i - 1]["date"],
+                "to_dt":    game_dates[i]["date"],
+            }
+
+    # ------------------------------------------------------------------ #
+    # Insights
+    # ------------------------------------------------------------------ #
+    # Longest gap
+    if gaps:
+        longest_i = max(gaps, key=lambda k: gaps[k]["weeks"])
+        lg = gaps[longest_i]
+        longest_gap_label = f"{lg['weeks']} weeks"
+        longest_gap_desc  = (
+            f"{lg['from_dt'].strftime('%b')} → "
+            f"{lg['to_dt'].strftime('%b %Y')}"
+        )
+    else:
+        longest_gap_label = "None"
+        longest_gap_desc  = "No significant gaps"
+
+    # Busiest month(s)
+    if monthly_data:
+        peak_count   = max(m["count"] for m in monthly_data)
+        peak_months  = [m for m in monthly_data if m["count"] == peak_count]
+        busiest_label = " & ".join(m["label"] for m in peak_months[:2])
+        if len(peak_months) > 2:
+            busiest_label += " …"
+        busiest_desc = f"{peak_count} game{'s' if peak_count != 1 else ''}" + (
+            " each" if len(peak_months) > 1 else ""
+        )
+    else:
+        busiest_label = "—"
+        busiest_desc  = "—"
+
+    # Cross-platform day formatter (no leading zero, works on Windows + Linux)
+    def fmt_day(d):
+        return f"{d.day} {d.strftime('%b %Y')}"
+
+    def fmt_short(d):
+        return f"{d.day} {d.strftime('%b \'%y')}"
+
+    history_span   = f"{span_label} of history"
+    date_range     = f"{first_date.strftime('%b \'%y')} — {last_date.strftime('%b \'%y')}"
+    first_game_date = fmt_day(first_date)
+
+    # ------------------------------------------------------------------ #
+    # Games list  (most-recent first, gap rows inserted above the game
+    #              that follows the gap)
+    # ------------------------------------------------------------------ #
+    games = []
+    for i in range(len(game_dates) - 1, -1, -1):
+        g   = game_dates[i]
+        cnt = g["player_count"]
+
+        fmt = "6v6" if cnt == 12 else "5v5" if cnt == 10 else "irregular"
+
+        # Gap note appears above the game that comes AFTER the break
+        gap_note = None
+        if i in gaps:
+            w = gaps[i]["weeks"]
+            gap_note = f"{w}-week gap"
+
+        games.append({
+            "num":      i + 1,          # sequential number, 1-based, oldest = 1
+            "date":     fmt_short(g["date"]),
+            "players":  cnt,
+            "format":   fmt,
+            "gap_note": gap_note,
+        })
+
+    # ------------------------------------------------------------------ #
+    # Assemble and render
+    # ------------------------------------------------------------------ #
+    stats = {
+        "total_games":       total_games,
+        "count_6v6":         count_6v6,
+        "count_5v5":         count_5v5,
+        "count_irregular":   total_games - count_6v6 - count_5v5,
+        "total_appearances": total_appearances,
+        "span_label":        span_label,
+    }
+
+    insights = {
+        "longest_gap_label": longest_gap_label,
+        "longest_gap_desc":  longest_gap_desc,
+        "busiest_label":     busiest_label,
+        "busiest_desc":      busiest_desc,
+        "first_game_date":   first_game_date,
+        "history_span":      history_span,
+        "date_range":        date_range,
+    }
+
+    return render_template('history.html',
+        stats=stats,
+        insights=insights,
+        monthly_data=monthly_data,
+        games=games,
+    )
 
 
 @app.route("/statistics")
 @login_required
-@cache.cached(timeout=300)
+@cache.cached(timeout=300, key_prefix=lambda: f"stats_{session.get('active_game_id')}")
 def statistics_page():
     """Statistics page with meaningful metrics"""
     game_id = session.get("active_game_id")
